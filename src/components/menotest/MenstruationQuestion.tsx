@@ -1,0 +1,139 @@
+'use client';
+
+import { Check } from 'lucide-react';
+
+
+export interface MenstruationOption {
+   id: string;
+   label: string;
+   description?: string;
+}
+
+interface Props {
+   value: string;
+   onChange: (value: string) => void;
+}
+
+
+// Opciones
+const options: MenstruationOption[] = [
+   {
+      id: 'regular',
+      label: 'Tengo menstruaciones regulares',
+      description: 'Mi periodo continúa presentándose de forma regular.'
+   },
+   {
+      id: 'irregular',
+      label: 'Tengo menstruaciones irregulares',
+      description: 'Mi periodo ha cambiado en frecuencia, duración o regularidad.'
+   },
+   {
+      id: 'trh_sangrado',
+      label: 'Uso terapia hormonal y continúo teniendo sangrado',
+      description: 'Actualmente utilizo terapia hormonal y presento sangrado.'
+   },
+   {
+      id: 'stopped',
+      label: 'Mi menstruación se ha detenido',
+      description: 'Ya no he presentado menstruación.'
+   },
+   {
+      id: 'trh_detenida',
+      label: 'Uso terapia hormonal y mi menstruación está detenida',
+      description: 'Actualmente utilizo terapia hormonal y no presento menstruación.'
+   },
+   {
+      id: 'histerectomia_ovarios',
+      label: 'Tuve una histerectomía y conservo mis ovarios',
+      description: 'Me realizaron una histerectomía, pero conservo mis ovarios.'
+   },
+   {
+      id: 'histerectomia_sin_ovarios',
+      label: 'Tuve una histerectomía y retiraron mis ovarios',
+      description: 'Me realizaron una histerectomía junto con la extracción de ovarios.'
+   },
+   {
+      id: 'medicamentos',
+      label: 'Mi menstruación se detuvo por medicamentos o tratamiento',
+      description: 'Un medicamento o tratamiento ha provocado cambios o ausencia de menstruación.'
+   },
+   {
+      id: 'cancer',
+      label: 'Mi menstruación cambió o se detuvo por tratamiento contra el cáncer',
+      description: 'He recibido un tratamiento contra el cáncer que afectó mi menstruación.'
+   }
+];
+
+
+export default function MenstruationQuestion({ value, onChange }: Props) {
+
+   return (
+      <div className="w-full">
+
+         {/* Categoría */}
+         <div className="mb-4">
+            <span className="inline-flex items-center rounded-full bg-[#f5eaf5] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#6e0b6c]">
+               Contexto menstrual
+            </span>
+         </div>
+
+
+         {/* Pregunta */}
+         <div className="mb-8">
+
+            <h2 className="text-2xl font-semibold leading-tight tracking-tight text-[#171717] sm:text-3xl">
+               ¿Cuál de las siguientes opciones describe mejor tu situación menstrual actual?
+            </h2>
+
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#6b7280] sm:text-base">
+               Selecciona la opción que más se acerque a tu situación actual. Esta información nos ayudará a contextualizar tus resultados.
+            </p>
+
+         </div>
+
+
+         {/* Opciones */}
+         <div className="space-y-3">
+
+            {options.map(option => {
+
+               const selected = value === option.id;
+
+               return (
+                  <button
+                     key={option.id}
+                     type="button"
+                     onClick={() => onChange(option.id)}
+                     className={`group flex w-full items-start justify-between gap-4 rounded-2xl border px-5 py-4 text-left transition-all duration-200 ${selected ? 'border-[#6e0b6c] bg-[#f8f1f8] shadow-[0_10px_25px_rgba(110,11,108,.08)]' : 'border-[#e5e7eb] bg-white hover:border-[#6e0b6c]/40 hover:bg-[#fcf9fc]'}`}
+                  >
+
+                     <div className="flex-1">
+
+                        <p className={`font-semibold transition-colors ${selected ? 'text-[#6e0b6c]' : 'text-[#171717]'}`}>
+                           {option.label}
+                        </p>
+
+                        {option.description && (
+                           <p className="mt-1 text-sm leading-5 text-[#6b7280]">
+                              {option.description}
+                           </p>
+                        )}
+
+                     </div>
+
+
+                     {/* Check */}
+                     <span className={`mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition ${selected ? 'border-[#6e0b6c] bg-[#6e0b6c] text-white' : 'border-[#d1d5db] bg-white text-transparent'}`}>
+                        <Check size={15} strokeWidth={3} />
+                     </span>
+
+                  </button>
+               );
+
+            })}
+
+         </div>
+
+      </div>
+   );
+}

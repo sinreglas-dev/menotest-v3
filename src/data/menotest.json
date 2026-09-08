@@ -1,0 +1,519 @@
+{
+   "title": "MenoTest",
+   "description": "Evaluación de síntomas y hábitos",
+   "mainOptions": [
+      {
+         "id": "nada",
+         "label": "Nada",
+         "value": 0
+      },
+      {
+         "id": "poco",
+         "label": "Poco",
+         "value": 1
+      },
+      {
+         "id": "bastante",
+         "label": "Bastante",
+         "value": 2
+      },
+      {
+         "id": "mucho",
+         "label": "Mucho",
+         "value": 3
+      }
+   ],
+   "questions": [
+      {
+         "id": 1,
+         "key": "palpitaciones",
+         "category": "cardiovascular",
+         "question": "¿Te ha pasado que el corazón se “pone en modo carrera”: late más rápido o más fuerte, incluso sin esfuerzo?"
+      },
+      {
+         "id": 2,
+         "key": "nervios",
+         "category": "emocional",
+         "question": "¿Te sientes más tensa o nerviosa, como si estuvieras en “modo alerta” gran parte del día?"
+      },
+      {
+         "id": 3,
+         "key": "dormir",
+         "category": "sueño",
+         "question": "¿Dormir se volvió complicado: te cuesta conciliar, te despiertas varias veces o amaneces cansada aunque hayas dormido?"
+      },
+      {
+         "id": 4,
+         "key": "aceleracion",
+         "category": "emocional",
+         "question": "¿Sientes que estás acelerada, como si no pudieras bajar el ritmo ni cuando quieres?"
+      },
+      {
+         "id": 5,
+         "key": "ansiedad",
+         "category": "emocional",
+         "question": "¿Has tenido episodios de ansiedad intensa o ataques de pánico?"
+      },
+      {
+         "id": 6,
+         "key": "concentracion",
+         "category": "cognitivo",
+         "question": "¿Te cuesta concentrarte en cosas que antes resolvías fácil?"
+      },
+      {
+         "id": 7,
+         "key": "energia",
+         "category": "energia",
+         "question": "¿Te sientes sin pila: cansada o sin energía incluso después de descansar?"
+      },
+      {
+         "id": 8,
+         "key": "interes",
+         "category": "emocional",
+         "question": "¿Has notado que cosas que antes te gustaban ya no te dan ganas o no te motivan igual?"
+      },
+      {
+         "id": 9,
+         "key": "tristeza",
+         "category": "emocional",
+         "question": "¿Te has sentido triste, bajoneada o deprimida?"
+      },
+      {
+         "id": 10,
+         "key": "llanto",
+         "category": "emocional",
+         "question": "¿Has tenido más ganas de llorar o episodios de llanto sin razón clara?"
+      },
+      {
+         "id": 11,
+         "key": "irritabilidad",
+         "category": "emocional",
+         "question": "¿Te notas más irritable, con menos paciencia o “mecha más corta” de lo habitual?"
+      },
+      {
+         "id": 12,
+         "key": "mareo",
+         "category": "neurologico",
+         "question": "¿Te has sentido mareada o has llegado a desmayarte?"
+      },
+      {
+         "id": 13,
+         "key": "presion",
+         "category": "neurologico",
+         "question": "¿Sientes la cabeza “apretada”, con presión u opresión como si trajeras una banda?"
+      },
+      {
+         "id": 14,
+         "key": "entumecimiento",
+         "category": "neurologico",
+         "question": "¿Has notado entumecimiento en alguna parte del cuerpo?"
+      },
+      {
+         "id": 15,
+         "key": "dolor_cabeza",
+         "category": "neurologico",
+         "question": "¿Te han aumentado los dolores de cabeza o aparecen más seguido?"
+      },
+      {
+         "id": 16,
+         "key": "dolor_muscular",
+         "category": "musculoesqueletico",
+         "question": "¿Tienes dolores musculares o molestias en las articulaciones?"
+      },
+      {
+         "id": 17,
+         "key": "sensibilidad",
+         "category": "neurologico",
+         "question": "¿Has notado hormigueo o menor sensibilidad en manos o pies?"
+      },
+      {
+         "id": 18,
+         "key": "respiracion",
+         "category": "respiratorio",
+         "question": "¿Te cuesta respirar o sientes falta de aire, aunque sea por momentos?"
+      },
+      {
+         "id": 19,
+         "key": "bochorno",
+         "category": "vasomotor",
+         "question": "¿Te dan bochornos/sofocos: calor súbito que sube de golpe (a veces con sudor)?"
+      },
+      {
+         "id": 20,
+         "key": "sudor",
+         "category": "vasomotor",
+         "question": "¿Sudas por la noche o te despiertas acalorada o incluso empapada?"
+      },
+      {
+         "id": 21,
+         "key": "sexo",
+         "category": "sexual",
+         "question": "¿Has notado menos interés en el sexo o cambios en tu deseo?"
+      },
+      {
+         "id": 22,
+         "key": "resequedad",
+         "category": "genitourinario",
+         "question": "¿Sientes resequedad vaginal, ardor o molestias?"
+      },
+      {
+         "id": 23,
+         "key": "incontinencia",
+         "category": "genitourinario",
+         "question": "¿Has tenido urgencia para ir al baño, pérdidas de orina o incontinencia? ¿Ya no te puedes reír con \"libertad\"?"
+      },
+      {
+         "id": 24,
+         "key": "niebla_mental",
+         "category": "cognitivo",
+         "question": "¿Sientes “niebla mental”, como si pensar con claridad costara más de lo normal?"
+      },
+      {
+         "id": 25,
+         "key": "memoria",
+         "category": "cognitivo",
+         "question": "¿Has notado más olvidos o problemas con la memoria últimamente?"
+      }
+   ],
+   "habits": [
+      {
+         "id": "caffeine",
+         "category": "alimentacion",
+         "question": "¿Cuál es tu consumo diario de café, té (té verde, té rojo, té negro) o bebidas energizantes?",
+         "options": [
+            {
+               "id": "none",
+               "label": "No consumo",
+               "value": 0
+            },
+            {
+               "id": "low",
+               "label": "1 a 2 porciones al día",
+               "value": 1
+            },
+            {
+               "id": "medium",
+               "label": "3 a 5 porciones al día",
+               "value": 2
+            },
+            {
+               "id": "high",
+               "label": "Más de 5 porciones al día",
+               "value": 3
+            }
+         ]
+      },
+      {
+         "id": "alcohol",
+         "category": "alimentacion",
+         "question": "¿Con qué frecuencia consumes bebidas alcohólicas?",
+         "options": [
+            {
+               "id": "never",
+               "label": "Nunca",
+               "value": 0
+            },
+            {
+               "id": "occasionally",
+               "label": "Ocasionalmente",
+               "value": 1
+            },
+            {
+               "id": "weekly",
+               "label": "Menos de 1 al día",
+               "value": 2
+            },
+            {
+               "id": "frequent",
+               "label": "8 o más veces por semana",
+               "value": 3
+            }
+         ]
+      },
+      {
+         "id": "sleep",
+         "category": "sueño",
+         "question": "¿Cómo describirías tu descanso habitual?",
+         "options": [
+            {
+               "id": "optimal",
+               "label": "Duermo entre 7 y 9 horas y mi descanso es reparador",
+               "value": 0
+            },
+            {
+               "id": "poor_quality",
+               "label": "Duermo entre 7 y 9 horas, pero mi descanso es poco reparador",
+               "value": 1
+            },
+            {
+               "id": "short",
+               "label": "Duermo entre 5 y 6 horas",
+               "value": 2
+            },
+            {
+               "id": "very_short",
+               "label": "Duermo menos de 5 horas",
+               "value": 3
+            }
+         ]
+      },
+      {
+         "id": "stress",
+         "category": "bienestar",
+         "question": "¿Qué nivel de estrés o sobrecarga mental experimentas habitualmente?",
+         "options": [
+            {
+               "id": "low",
+               "label": "Bajo",
+               "value": 0
+            },
+            {
+               "id": "moderate",
+               "label": "Moderado",
+               "value": 1
+            },
+            {
+               "id": "high",
+               "label": "Alto",
+               "value": 2
+            },
+            {
+               "id": "very_high",
+               "label": "Muy alto",
+               "value": 3
+            }
+         ]
+      },
+      {
+         "id": "physical_activity",
+         "category": "actividad_fisica",
+         "question": "En una semana habitual, ¿cuánto tiempo realizas actividad física que aumente tu respiración o ritmo cardiaco, como caminar rápido, hacer ejercicio, correr, nadar, bailar o andar en bicicleta?",
+         "options": [
+            {
+               "id": "300_plus",
+               "label": "300 minutos o más por semana",
+               "value": 0
+            },
+            {
+               "id": "150_299",
+               "label": "Entre 150 y 299 minutos por semana",
+               "value": 0
+            },
+            {
+               "id": "75_149",
+               "label": "Entre 75 y 149 minutos por semana",
+               "value": 2
+            },
+            {
+               "id": "less_75",
+               "label": "Menos de 75 minutos por semana",
+               "value": 3
+            },
+            {
+               "id": "none",
+               "label": "No realizo actividad física",
+               "value": 3
+            }
+         ]
+      },
+      {
+         "id": "muscle_strength",
+         "category": "actividad_fisica",
+         "question": "¿Cuántos días a la semana realizas ejercicios para fortalecer tus músculos?",
+         "options": [
+            {
+               "id": "three_plus",
+               "label": "3 o más días",
+               "value": 0
+            },
+            {
+               "id": "two_days",
+               "label": "2 días",
+               "value": 0
+            },
+            {
+               "id": "one_day",
+               "label": "1 día",
+               "value": 2
+            },
+            {
+               "id": "none",
+               "label": "Ninguno",
+               "value": 3
+            }
+         ]
+      },
+      {
+         "id": "sedentary",
+         "category": "actividad_fisica",
+         "question": "En un día habitual, ¿aproximadamente cuántas horas pasas sentada o reclinada mientras estás despierta? Incluye trabajo, computadora, televisión, traslados, lectura, etc. No incluyas el tiempo que pasas durmiendo.",
+         "options": [
+            {
+               "id": "less_4",
+               "label": "Menos de 4 horas",
+               "value": 0
+            },
+            {
+               "id": "4_6",
+               "label": "4 a menos de 6 horas",
+               "value": 1
+            },
+            {
+               "id": "6_8",
+               "label": "6 a menos de 8 horas",
+               "value": 2
+            },
+            {
+               "id": "8_10",
+               "label": "8 a menos de 10 horas",
+               "value": 3
+            },
+            {
+               "id": "10_plus",
+               "label": "10 horas o más",
+               "value": 3
+            }
+         ]
+      },
+      {
+         "id": "hydration",
+         "category": "alimentacion",
+         "question": "¿Cuánta agua consumes aproximadamente al día?",
+         "options": [
+            {
+               "id": "optimal",
+               "label": "Más de 2 litros",
+               "value": 0
+            },
+            {
+               "id": "good",
+               "label": "Entre 1.5 y 2 litros",
+               "value": 1
+            },
+            {
+               "id": "low",
+               "label": "Entre 1 y 1.5 litros",
+               "value": 2
+            },
+            {
+               "id": "very_low",
+               "label": "Menos de 1 litro",
+               "value": 3
+            }
+         ]
+      },
+      {
+         "id": "fruit_vegetables",
+         "category": "alimentacion",
+         "question": "En un día habitual, ¿cuántas porciones de proteina, frutas y verduras consumes en total? Una porción equivale aproximadamente a una pieza de fruta o ½ taza de verduras.",
+         "options": [
+            {
+               "id": "5_plus",
+               "label": "5 o más porciones",
+               "value": 0
+            },
+            {
+               "id": "4",
+               "label": "4 porciones",
+               "value": 1
+            },
+            {
+               "id": "2_3",
+               "label": "2 a 3 porciones",
+               "value": 2
+            },
+            {
+               "id": "0_1",
+               "label": "0 a 1 porciones",
+               "value": 3
+            }
+         ]
+      },
+      {
+         "id": "nutrition",
+         "category": "alimentacion",
+         "question": "En una semana habitual, ¿con qué frecuencia consumes alimentos ultraprocesados o bebidas azucaradas, como refrescos, jugos industrializados, dulces, galletas, frituras, comida rápida o embutidos?",
+         "options": [
+            {
+               "id": "rarely",
+               "label": "Rara vez o nunca",
+               "value": 0
+            },
+            {
+               "id": "1_2_days",
+               "label": "1 a 2 días por semana",
+               "value": 1
+            },
+            {
+               "id": "3_4_days",
+               "label": "3 a 4 días por semana",
+               "value": 2
+            },
+            {
+               "id": "5_6_days",
+               "label": "5 a 6 días por semana",
+               "value": 3
+            },
+            {
+               "id": "daily",
+               "label": "Todos los días o varias veces al día",
+               "value": 3
+            }
+         ]
+      },
+      {
+         "id": "screens_posture",
+         "category": "sueño",
+         "question": "Habitualmente, ¿cuánto tiempo antes de dormir dejas de usar pantallas como celular, televisión, computadora o tableta?",
+         "options": [
+            {
+               "id": "90_plus",
+               "label": "90 minutos o más antes de dormir",
+               "value": 0
+            },
+            {
+               "id": "60_89",
+               "label": "Entre 60 y 89 minutos antes de dormir",
+               "value": 1
+            },
+            {
+               "id": "30_59",
+               "label": "Entre 30 y 59 minutos antes de dormir",
+               "value": 2
+            },
+            {
+               "id": "less_30",
+               "label": "Menos de 30 minutos antes de dormir o las uso hasta acostarme",
+               "value": 3
+            }
+         ]
+      },
+      {
+         "id": "tobacco",
+         "category": "estilo_de_vida",
+         "question": "¿Con qué frecuencia consumes prodcutos con tabaco (cigarrillos, puros, etc.) actualmente?",
+         "options": [
+            {
+               "id": "never",
+               "label": "No consumo tabaco",
+               "value": 0
+            },
+            {
+               "id": "occasional",
+               "label": "Ocasionalmente, pero no todos los días",
+               "value": 1
+            },
+            {
+               "id": "daily_low",
+               "label": "Todos los días, hasta 5 cigarrillos al día",
+               "value": 2
+            },
+            {
+               "id": "daily_high",
+               "label": "Todos los días, más de 5 cigarrillos al día",
+               "value": 3
+            }
+         ]
+      }
+   ]
+}
