@@ -45,7 +45,7 @@ export async function POST(peticion: NextRequest) {
       nombre: paciente.name,
       apellidoPaterno: paciente.paternalLastName,
       telefono: paciente.phone,
-      etiqueta: `Menotest - ${NOMBRES_PROGRAMA[program] ?? program}`,
+      etiqueta: `Menotest - ${NOMBRES_PROGRAMA[programa] ?? programa}`,
     }).catch((error) => console.error('[evaluacion] Error en Mailchimp:', error));
 
 

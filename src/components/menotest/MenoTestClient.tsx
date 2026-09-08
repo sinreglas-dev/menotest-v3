@@ -10,7 +10,7 @@ import Results from '@/components/menotest/Results';
 import testDataJson from '@/data/menotest.json';
 
 import { calculateTotalScore } from '@/shared/data/scoring';
-import { calculateAge, calculateStage, calculateIMC, classifyIMC } from '@/shared/data/scoring.ts'; 
+import { calculateAge, calculateStage, calculateIMC, classifyIMC } from '@/shared/data/scoring'; 
 
 import type { MenoTestProgram } from '@/shared/config/program';
 import type {
