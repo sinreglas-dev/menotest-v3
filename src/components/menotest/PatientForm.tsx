@@ -369,6 +369,14 @@ export default function PatientForm({ onSubmit, onBack, program }: Props) {
                            <ShieldCheck size={19} className="mt-0.5 shrink-0 text-[#6e0b6c]" />
                            <p className="text-xs leading-5 text-[#6b7280]">Tu información será utilizada únicamente para personalizar tu evaluación y generar tus resultados.</p>
                         </div>
+                        <div className="flex items-start gap-3">
+                           
+                           <p className="mt-7 max-w-xl  text-[#716764] text-xs">
+                              Menotest es una herramienta de tamizaje desarrollada por SinReglas para identificar síntomas frecuentes durante la transición menopáusica y el climaterio. Su diseño se basa en la evidencia científica disponible sobre sintomatología climatérica, incluyendo la literatura relacionada con escalas clínicas previamente publicadas, como la Greene Climacteric Scale, pero no constituye una reproducción, traducción ni versión autorizada de dicha escala.
+                              Menotest incorpora dimensiones adicionales desarrolladas por SinReglas, incluyendo salud urogenital, sueño, energía, cognición, impacto funcional, hábitos y contexto clínico. Sus resultados tienen finalidad orientativa y educativa, y no sustituyen una valoración médica individual ni deben interpretarse como diagnóstico.
+                           </p>
+
+                        </div>
 
                      </div>
 
