@@ -14,9 +14,10 @@ import type { MenoTestProgram } from '@/shared/config/program';
 interface Props {
   onStart: () => void;
   program: MenoTestProgram;
+  cargando?: boolean;
 }
 
-export default function Welcome({ onStart, program }: Props) {
+export default function Welcome({ onStart, program, cargando = false }: Props) {
 
   return (
     <section className="relative min-h-screen overflow-hidden bg-[#fcf7fb]">
@@ -56,9 +57,10 @@ export default function Welcome({ onStart, program }: Props) {
               <button
                 type="button"
                 onClick={onStart}
-                className="group mt-9 hidden items-center gap-3 rounded-full bg-[#6e0b6c] px-8 py-4 text-base font-semibold text-white shadow-lg shadow-[#b67d82]/20 transition duration-300 hover:-translate-y-0.5 hover:bg-[#560f55] lg:inline-flex"
+                disabled={cargando}
+                className="group mt-9 hidden items-center gap-3 rounded-full bg-[#6e0b6c] px-8 py-4 text-base font-semibold text-white shadow-lg shadow-[#b67d82]/20 transition duration-300 hover:-translate-y-0.5 hover:bg-[#560f55] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:bg-[#6e0b6c] lg:inline-flex"
               >
-                Comenzar evaluación
+                {cargando ? 'Verificando...' : 'Comenzar evaluación'}
 
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 transition-transform group-hover:translate-x-1">
                   <ArrowRight size={18} />
@@ -124,9 +126,10 @@ export default function Welcome({ onStart, program }: Props) {
               <button
                 type="button"
                 onClick={onStart}
-                className="group flex w-full items-center justify-center gap-3 rounded-full bg-[#6e0b6c] px-8 py-4 text-base font-semibold text-white shadow-lg shadow-[#b67d82]/20 transition duration-300 hover:bg-[#560f55]"
+                disabled={cargando}
+                className="group flex w-full items-center justify-center gap-3 rounded-full bg-[#6e0b6c] px-8 py-4 text-base font-semibold text-white shadow-lg shadow-[#b67d82]/20 transition duration-300 hover:bg-[#560f55] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-[#6e0b6c]"
               >
-                Comenzar evaluación
+                {cargando ? 'Verificando...' : 'Comenzar evaluación'}
 
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15">
                   <ArrowRight size={18} />

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import Welcome from '@/components/menotest/Welcome';
 import PatientForm, { PatientData } from '@/components/menotest/PatientForm';
@@ -9,29 +9,29 @@ import Results from '@/components/menotest/Results';
 
 import testDataJson from '@/data/menotest.json';
 
-import { calculateTotalScore } from '@/shared/data/scoring';
-import { calculateAge, calculateStage, calculateIMC, classifyIMC } from '@/shared/data/scoring'; 
+import {
+  calculateTotalScore,
+  calculateAge,
+  calculateStage,
+  calculateIMC,
+  classifyIMC,
+} from '@/shared/data/scoring';
 
 import type { MenoTestProgram } from '@/shared/config/program';
-import type {
-  Answer,
-  HabitAnswer,
-  QuizResult,
-  TestData
-} from '@/types/menotest';
+import type { Answer, HabitAnswer, QuizResult, TestData } from '@/types/menotest';
 
 // Datos del test
 const testData = testDataJson as TestData;
 
 // Pasos disponibles
 type Step = 'welcome' | 'patient' | 'quiz' | 'results';
+type EstadoBaseDatos = 'verificando' | 'activa' | 'error';
 
 interface Props {
   program: MenoTestProgram;
 }
 
 export default function MenoTestClient({ program }: Props) {
-
   // Paso actual
   const [step, setStep] = useState<Step>('welcome');
 
@@ -49,6 +49,41 @@ export default function MenoTestClient({ program }: Props) {
 
   // Puntaje total de síntomas
   const [score, setScore] = useState(0);
+
+  // Estado de la conexión a base de datos
+  const [estadoBd, setEstadoBd] = useState<EstadoBaseDatos>('verificando');
+  const [verificandoAlComenzar, setVerificandoAlComenzar] = useState(false);
+
+  /**
+   * Verifica si la base de datos está disponible consultando /api/salud.
+   * Devuelve `true` si está activa, `false` si hay error.
+   */
+  const verificarBaseDatos = async (): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/salud', { cache: 'no-store' });
+      const activa = res.ok;
+      setEstadoBd(activa ? 'activa' : 'error');
+      return activa;
+    } catch {
+      setEstadoBd('error');
+      return false;
+    }
+  };
+
+  // Verificación silenciosa al cargar la página
+  useEffect(() => {
+    verificarBaseDatos();
+  }, []);
+
+  // Verificación bloqueante al dar clic en "Comenzar evaluación"
+  const handleStart = async () => {
+    setVerificandoAlComenzar(true);
+    const activa = await verificarBaseDatos();
+    setVerificandoAlComenzar(false);
+
+    if (!activa) return; // se queda en welcome mostrando el aviso de error
+    setStep('patient');
+  };
 
   // Guarda los datos del paciente e inicia el test
   const handlePatient = (data: PatientData) => {
@@ -127,18 +162,32 @@ export default function MenoTestClient({ program }: Props) {
 
     window.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: 'smooth',
     });
   };
 
   return (
     <main className="min-h-screen bg-[#fafafa]">
 
+      {/* Banner de error de conexión a base de datos */}
+      {step === 'welcome' && estadoBd === 'error' && (
+        <div className="fixed left-0 right-0 top-0 z-50 bg-red-600 px-4 py-3 text-center text-sm font-medium text-white">
+          No se pudo conectar con la base de datos. Verifica la configuración antes de continuar.
+          <button
+            onClick={verificarBaseDatos}
+            className="ml-3 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold hover:bg-white/30"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
+
       {/* Pantalla de bienvenida */}
       {step === 'welcome' && (
         <Welcome
           program={program}
-          onStart={() => setStep('patient')}
+          onStart={handleStart}
+          cargando={verificandoAlComenzar}
         />
       )}
 
