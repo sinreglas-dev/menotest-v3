@@ -491,7 +491,7 @@
       {
          "id": "tobacco",
          "category": "estilo_de_vida",
-         "question": "¿Con qué frecuencia consumes prodcutos con tabaco (cigarrillos, puros, etc.) actualmente?",
+         "question": "¿Con qué frecuencia consumes productos con tabaco (cigarrillos, puros, etc.) actualmente?",
          "options": [
             {
                "id": "never",

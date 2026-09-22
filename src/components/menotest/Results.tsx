@@ -97,16 +97,22 @@ function getStageContent(stage: string, firstName: string): StageContent {
   const normalizedStage = stage.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
 
-  // Menopausia precoz / prematura
+  // Menopausia precoz / prematura|
   if (normalizedStage.includes('precoz') || normalizedStage.includes('prematura')) {
     return {
-      title: 'Probablemente estés en la menopausia precoz o prematura',
+      title: 'Probablemente estés atravesando una menopausia precoz o prematura.',
       content: (
         <div className="space-y-4 text-sm leading-7 text-[#4b5563] sm:text-base">
           <p>¡Hola <strong>{firstName}</strong>!</p>
-          <p>La menopausia prematura puede ser causada por una insuficiencia ovárica prematura, que ocurre cuando los ovarios no producen los niveles normales de hormonas reproductivas. Esto puede deberse a factores genéticos, enfermedades autoinmunes u otras causas desconocidas.</p>
-          <p>Además, existen otros factores que dañan los ovarios o impiden que el cuerpo produzca estrógeno, como tratamientos contra el cáncer, cirugía para extirpar los ovarios o el útero, quimioterapia y radioterapia.</p>
-          <p>La terapia con estrógeno es una opción utilizada para evitar ciertas complicaciones relacionadas con osteoporosis y enfermedades cardiovasculares, entre otras. Te recomendamos conversar con tu doctora sobre los riesgos y beneficios de esta terapia en tu caso particular.</p>
+          <p>Cuando la menopausia ocurre antes de lo esperado, es especialmente importante contar con acompañamiento médico para entender qué está sucediendo y cuidar tu salud a corto y largo plazo.</p>
+          <p>Puede estar relacionada con una insuficiencia ovárica prematura, factores genéticos o autoinmunes, algunos tratamientos contra el cáncer, quimioterapia, radioterapia o ciertas cirugías. En algunos casos, la causa no se identifica.</p>
+          <p>Existen distintas opciones de tratamiento y manejo. La terapia hormonal puede ser una de ellas, dependiendo de tu historia clínica y situación particular. Por eso, te recomendamos conversar con una profesional de la salud sobre sus posibles beneficios y riesgos en tu caso.</p>
+          <p>Puedes pedir una cita con nuestro equipo médico en la Clínica Virtual:</p>
+          <p className="text-sm text-[#6e0b6c] underline"><a href="https://sin-reglas.mx/clinica-virtual/" target="_blank" rel="noopener noreferrer">https://sin-reglas.mx/clinica-virtual/</a></p>
+          <p>También puedes complementar tu atención con nuestro Menocoaching, para trabajar hábitos y herramientas que te ayuden a sentirte mejor durante esta etapa.</p>
+          <p>Reserva tu sesión aquí:</p>
+          <p className="text-sm text-[#6e0b6c] underline"><a href="https://sin-reglas.mx/menocoaching/" target="_blank" rel="noopener noreferrer">https://sin-reglas.mx/menocoaching/</a></p>
+          <p>Y recuerda: no tienes que transitar esta etapa sola. Informarte y recibir atención adecuada puede hacer una gran diferencia.</p>
         </div>
       )
     };
@@ -120,14 +126,15 @@ function getStageContent(stage: string, firstName: string): StageContent {
       content: (
         <div className="space-y-4 text-sm leading-7 text-[#4b5563] sm:text-base">
           <p>¡Hola <strong>{firstName}</strong>!</p>
-          <p>Este procedimiento no te hace entrar directo a la menopausia. Para saber exactamente en qué momento estás, te recomendamos consultar con tu doctora.</p>
-
-          <div className="rounded-2xl bg-[#faf7fa] p-5">
-            <p className="font-bold text-[#171717]">¿Qué tienes que saber?</p>
-            <p className="mt-2">Ya no menstruas, pero al tener uno o ambos ovarios, sigues produciendo hormonas. Todas las mujeres presentan diferentes síntomas y no todos son inmediatos. Además, pueden variar a lo largo del tiempo.</p>
-          </div>
-
-          <p>¡Que no te dé miedo ni te tome por sorpresa! Es una etapa natural de la vida por la que todas vamos a pasar. Además, es una gran oportunidad para verte a ti misma y cuidarte.</p>
+          <p>Una histerectomía no necesariamente significa que hayas entrado en la menopausia. Si conservas uno o ambos ovarios, estos pueden continuar produciendo hormonas, aunque ya no tengas menstruaciones. Por eso puede ser más difícil identificar en qué etapa de la transición te encuentras.</p>
+          <p>Los cambios hormonales y los síntomas son diferentes para cada mujer y pueden aparecer gradualmente. Si has comenzado a notar cambios físicos, emocionales, cognitivos o sexuales que antes no tenías, vale la pena prestarles atención.</p>
+          <p>Te recomendamos consultar con una profesional de la salud para entender mejor en qué momento estás y qué cuidados pueden ser adecuados para ti.</p>
+          <p>También puedes apoyarte en nuestro Menocoaching para trabajar hábitos y herramientas que favorezcan tu bienestar.</p>
+          <p>Reserva tu sesión aquí:</p>
+          <p className="text-sm text-[#6e0b6c] underline"><a href="https://sin-reglas.mx/menocoaching/" target="_blank" rel="noopener noreferrer">https://sin-reglas.mx/menocoaching/</a></p>
+          <p>Conoce más sobre los síntomas y las distintas etapas en nuestra Guía de la Menopausia:</p>
+          <p className="text-sm text-[#6e0b6c] underline"><a href="https://sin-reglas.mx/guia-de-la-menopausia/" target="_blank" rel="noopener noreferrer">https://sin-reglas.mx/guia-de-la-menopausia/</a></p>
+          <p>Entender lo que está pasando en tu cuerpo es el primer paso para poder cuidarlo mejor.</p>
         </div>
       )
     };
@@ -141,12 +148,14 @@ function getStageContent(stage: string, firstName: string): StageContent {
       content: (
         <div className="space-y-4 text-sm leading-7 text-[#4b5563] sm:text-base">
           <p>¡Hola <strong>{firstName}</strong>!</p>
-          <p>La perimenopausia, conocida como la transición a la menopausia, se refiere a la etapa previa al día de tu última menstruación, antes de dejar de menstruar por 12 meses consecutivos.</p>
-          <p>Es ahora cuando tus hormonas se vuelven impredecibles y tu cuerpo puede experimentar síntomas que antes no tenías, o que ahora sientes con mayor intensidad.</p>
-          <p className="font-semibold text-[#6e0b6c]">Y sí, ¡a todas nos pasa!</p>
-          <p>Nuestro cuerpo cambia y se prepara para una nueva etapa. Cada cuerpo la experimenta de forma distinta. Puede durar desde algunos meses hasta varios años.</p>
-          <p>Conocer los síntomas te permitirá identificarlos y manejarlos adecuadamente.</p>
-          <p>¡Que no te dé miedo ni te tome por sorpresa! Es una etapa natural de la vida por la que todas vamos a pasar. Además, es una gran oportunidad para verte a ti misma y cuidarte.</p>
+          <p>La perimenopausia es la etapa de transición hacia la menopausia. Durante este periodo, tus hormonas comienzan a fluctuar y pueden aparecer síntomas nuevos o intensificarse algunos que ya tenías. Esta transición puede durar desde algunos meses hasta varios años y cada mujer la vive de manera diferente.</p>
+          <p>Puedes experimentar cambios en tu menstruación, sueño, energía, estado de ánimo, concentración, sexualidad y otros aspectos de tu salud. Conocer estos cambios te ayudará a entender mejor lo que estás viviendo y a buscar las herramientas adecuadas para manejarlos.</p>
+          <p>Tus resultados pueden ser un buen punto de partida para hablar con una profesional de la salud. Te recomendamos una valoración médica para revisar tus síntomas, antecedentes y necesidades de manera integral.</p>
+          <p>Agenda una cita en nuestra Clínica Virtual:</p>
+          <p className="text-sm text-[#6e0b6c] underline"><a href="https://sin-reglas.mx/clinica-virtual/" target="_blank" rel="noopener noreferrer">https://sin-reglas.mx/clinica-virtual/</a></p>
+          <p>También puedes complementar tu cuidado con nuestro Menocoaching, enfocado en hábitos y herramientas para sentirte mejor durante esta transición.</p>
+          <p className="text-sm text-[#6e0b6c] underline"><a href="https://sin-reglas.mx/menocoaching/" target="_blank" rel="noopener noreferrer">https://sin-reglas.mx/menocoaching/</a></p>
+          <p>No se trata solamente de atravesar esta etapa, sino de entender qué necesita tu cuerpo y empezar a cuidarte de una manera diferente.</p>
         </div>
       )
     };
@@ -160,17 +169,15 @@ function getStageContent(stage: string, firstName: string): StageContent {
       content: (
         <div className="space-y-4 text-sm leading-7 text-[#4b5563] sm:text-base">
           <p>¡Hola <strong>{firstName}</strong>!</p>
-          <p>Esta etapa es posterior a la menopausia, es decir, después del día de tu última menstruación. En esta etapa tus hormonas se nivelan y los síntomas que antes te molestaban pueden ir disminuyendo.</p>
-          <p className="font-semibold text-[#6e0b6c]">¡Una buena noticia por donde lo veas!</p>
-          <p>Lo importante en esta etapa es poner atención a tu salud a largo plazo, ya que los factores de riesgo para enfermedades del corazón, entre otras, se incrementan.</p>
-
-          <div className="rounded-2xl bg-[#faf7fa] p-5">
-            <p className="font-bold text-[#171717]">¿Qué tienes que saber?</p>
-            <p className="mt-2">Todas las mujeres envejecemos naturalmente y experimentamos diferentes etapas de la vida. ¡Es normal!</p>
-          </div>
-
-          <p>Es importante que hagas cambios en tu estilo de vida. Lo que en algún momento te funcionó, quizá ahora necesite algunos ajustes.</p>
-          <p>En esta etapa es muy importante cuidar tu nutrición, ejercicio, sueño y salud mental. Hacer cambios pequeños de manera constante es mejor que tratar de cambiar todo de un día para otro.</p>
+          <p>La posmenopausia comienza después de haber pasado 12 meses consecutivos sin menstruación. Algunos síntomas pueden disminuir con el tiempo, aunque otros pueden continuar o aparecer en esta etapa.</p>
+          <p>Ahora es especialmente importante mirar tu salud a largo plazo. Los cambios hormonales asociados con la menopausia pueden influir en distintos aspectos de tu salud, por lo que vale la pena poner atención a factores como tu salud cardiovascular, ósea, metabólica, sexual, cognitiva y emocional.</p>
+          <p>La nutrición, el ejercicio, el sueño y la salud emocional cobran especial importancia en esta etapa. No necesitas cambiar todo de un día para otro: pequeños cambios sostenidos pueden tener un impacto importante en tu bienestar.</p>
+          <p>Te recomendamos una valoración médica para revisar tus síntomas, antecedentes y factores de riesgo.</p>
+          <p>Agenda una cita en nuestra Clínica Virtual:</p>
+          <p className="text-sm text-[#6e0b6c] underline"><a href="https://sin-reglas.mx/clinica-virtual/" target="_blank" rel="noopener noreferrer">https://sin-reglas.mx/clinica-virtual/</a></p>
+          <p>También puedes apoyarte en nuestro Menocoaching para construir hábitos que funcionen para esta nueva etapa.</p>
+          <p className="text-sm text-[#6e0b6c] underline"><a href="https://sin-reglas.mx/menocoaching/" target="_blank" rel="noopener noreferrer">https://sin-reglas.mx/menocoaching/</a></p>
+          <p>La posmenopausia no es el final de algo: es una nueva etapa en la que cuidar tu salud hoy puede cambiar cómo vivirás los próximos años.</p>
         </div>
       )
     };
@@ -179,15 +186,19 @@ function getStageContent(stage: string, firstName: string): StageContent {
 
   // Antes de la perimenopausia
   return {
-    title: 'Aún no estás en la peri, pero es buena idea que te prepares',
+    title: 'Aún no estás en la perimenopausia, pero es un gran momento para prepararte.',
     content: (
       <div className="space-y-4 text-sm leading-7 text-[#4b5563] sm:text-base">
         <p>¡Hola <strong>{firstName}</strong>!</p>
-        <p>¡Que no te dé miedo ni te tome por sorpresa! Es una etapa natural de la vida por la que todas vamos a pasar. Además, es una gran oportunidad para verte a ti misma y cuidarte.</p>
-        <p>¿Sabías que tu vivencia de la menopausia depende de muchos factores, incluyendo tus hábitos de ejercicio, nutrición, sueño y salud emocional?</p>
-        <p>¡Es importante que te prepares!</p>
-        <p>La menopausia tiene 34 síntomas. Conocerlos puede ayudarte a identificarlos con mayor facilidad cuando sucedan y transitar esta etapa de forma más consciente, informada y cuidada.</p>
-        <p className="font-semibold text-[#6e0b6c]">Ya sabes lo que dicen… ¡la información es poder!</p>
+        <p>La menopausia es una etapa natural de la vida y conocerla antes de que llegue puede ayudarte a vivirla con más información, tranquilidad y herramientas.</p>
+        <p>Tu experiencia durante esta transición no depende solamente de las hormonas. Tu alimentación, actividad física, sueño, salud emocional y otros hábitos también pueden influir en cómo te sientes. Por eso, este es un buen momento para poner atención a tu salud y empezar a cuidarte pensando en los próximos años.</p>
+        <p>La transición a la menopausia puede venir acompañada de distintos síntomas. Conocerlos te ayudará a reconocer cambios en tu cuerpo y saber cuándo buscar orientación o atención.</p>
+        <p>Si quieres prepararte de manera más personalizada, te invitamos a nuestro Menocoaching, donde podrás trabajar en hábitos y herramientas para cuidar tu bienestar durante esta etapa.</p>
+        <p className="font-semibold text-[#6e0b6c]">Reserva tu sesión aquí:</p>
+        <p className="text-sm text-[#6e0b6c] underline"><a href="https://sin-reglas.mx/menocoaching/" target="_blank" rel="noopener noreferrer">https://sin-reglas.mx/menocoaching/</a></p>
+        <p>También puedes conocer más sobre la menopausia, sus etapas y síntomas en nuestra Guía de la Menopausia:</p>
+        <p className="text-sm text-[#6e0b6c] underline"><a href="https://sin-reglas.mx/guia-de-la-menopausia/" target="_blank" rel="noopener noreferrer">https://sin-reglas.mx/guia-de-la-menopausia/</a></p>
+        <p>Recuerda: conocer tu cuerpo hoy también es una forma de cuidar tu salud futura.</p>
       </div>
     )
   };
