@@ -3,7 +3,7 @@
 // Muestra y genera el reporte estructurado para profesionales de salud.
 // Resume las respuestas del MenoTest sin generar diagnósticos ni modificar las reglas clínicas.
 
-import { useEffect, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Activity, Brain, Check, Download, FileText, HeartPulse, LoaderCircle, Stethoscope, X } from 'lucide-react';
 
 import type { Answer, HabitAnswer, Question } from '@/types/menotest';
@@ -12,6 +12,8 @@ import type { MenoTestProgram } from '@/shared/config/program';
 
 import { evaluateClinicalReferral } from '@/shared/data/clinicalReferral';
 import { calculateAge, calculateIMC, calculateStage, classifyIMC } from '@/shared/data/scoring';
+
+import { crearDocumentoPdf, agregarElementoAPdf, nombreArchivoSeguro } from '@/shared/pdf/generarPdf';
 
 
 interface Props {
@@ -22,6 +24,11 @@ interface Props {
    questions: Question[];
    score: number;
    program: MenoTestProgram;
+}
+
+// Handle expuesto hacia componentes padres
+export interface MedicalReportHandle {
+   generarPdfBlob: () => Promise<Blob | null>;
 }
 
 
@@ -119,7 +126,10 @@ const HABIT_VALUE_LABELS: Record<number, string> = {
 };
 
 
-export default function MedicalReport({ patient, menstruationValue, answers, habitAnswers, questions, score, program }: Props) {
+const MedicalReport = forwardRef<MedicalReportHandle, Props>(function MedicalReport(
+   { patient, menstruationValue, answers, habitAnswers, questions, score, program },
+   ref
+) {
 
    // Estado
    const [isOpen, setIsOpen] = useState(false);
@@ -198,91 +208,38 @@ export default function MedicalReport({ patient, menstruationValue, answers, hab
    const clinicalReferral = isIztapalapa ? evaluateClinicalReferral(answers, score) : null;
 
 
+   /**
+    * Construye el PDF a partir del DOM del reporte.
+    * Devuelve el objeto jsPDF listo para descargar o exportar como Blob.
+    */
+   const construirPdf = async () => {
+      if (!reportRef.current) return null;
+
+      const pdf = await crearDocumentoPdf();
+      await agregarElementoAPdf(pdf, reportRef.current);
+
+      return pdf;
+   };
+
+
    // Descargar PDF
    const downloadMedicalReport = async () => {
 
-      if (!reportRef.current || isGenerating) return;
+      if (isGenerating) return;
 
       try {
-
          setIsGenerating(true);
 
-         const [html2canvasModule, jsPDFModule] = await Promise.all([
-            import('html2canvas'),
-            import('jspdf')
-         ]);
+         const pdf = await construirPdf();
+         if (!pdf) return;
 
-         const html2canvas = html2canvasModule.default;
-         const jsPDF = jsPDFModule.jsPDF;
-         const element = reportRef.current;
+         const patientFileName = nombreArchivoSeguro(fullName);
 
-
-         const canvas = await html2canvas(element, {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            logging: false,
-            windowWidth: element.scrollWidth
-         });
-
-
-         const pdf = new jsPDF({
-            orientation: 'portrait',
-            unit: 'mm',
-            format: 'a4'
-         });
-
-
-         const pageWidth = pdf.internal.pageSize.getWidth();
-         const pageHeight = pdf.internal.pageSize.getHeight();
-         const margin = 10;
-         const printableWidth = pageWidth - margin * 2;
-         const printableHeight = pageHeight - margin * 2;
-         const pxPerMm = canvas.width / printableWidth;
-         const pageHeightPx = Math.floor(printableHeight * pxPerMm);
-
-         let renderedHeight = 0;
-         let pageIndex = 0;
-
-
-         while (renderedHeight < canvas.height) {
-
-            if (pageIndex > 0) pdf.addPage();
-
-            const currentPageHeight = Math.min(pageHeightPx, canvas.height - renderedHeight);
-            const pageCanvas = document.createElement('canvas');
-
-            pageCanvas.width = canvas.width;
-            pageCanvas.height = currentPageHeight;
-
-            const context = pageCanvas.getContext('2d');
-
-            if (!context) break;
-
-            context.fillStyle = '#ffffff';
-            context.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-
-            context.drawImage(canvas, 0, renderedHeight, canvas.width, currentPageHeight, 0, 0, canvas.width, currentPageHeight);
-
-            const imageData = pageCanvas.toDataURL('image/jpeg', 0.96);
-            const imageHeightMm = currentPageHeight / pxPerMm;
-
-            pdf.addImage(imageData, 'JPEG', margin, margin, printableWidth, imageHeightMm);
-
-            renderedHeight += currentPageHeight;
-            pageIndex++;
-         }
-
-
-         // Nombre archivo
-         const patientFileName = fullName
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-|-$/g, '');
-
-         pdf.save(patientFileName ? `reporte-medico-menotest-${patientFileName}.pdf` : 'reporte-medico-menotest.pdf');
+         pdf.save(
+            patientFileName
+               ? `reporte-medico-menotest-${patientFileName}.pdf`
+               : 'reporte-medico-menotest.pdf'
+         );
 
       } catch (error) {
 
@@ -293,6 +250,15 @@ export default function MedicalReport({ patient, menstruationValue, answers, hab
          setIsGenerating(false);
       }
    };
+
+
+   // Expone la generación silenciosa (sin descargar) para el envío automático por correo
+   useImperativeHandle(ref, () => ({
+      generarPdfBlob: async () => {
+         const pdf = await construirPdf();
+         return pdf ? (pdf.output('blob') as Blob) : null;
+      },
+   }), []);
 
 
    return (
@@ -447,7 +413,7 @@ export default function MedicalReport({ patient, menstruationValue, answers, hab
                            <MedicalSection number="4" title="Síntomas sin presencia reportada">
 
                               <div className="flex flex-wrap gap-2">
-                                 {symptomRows.filter(symptom => symptom.value === 0).map(symptom => <span key={symptom.key} className="rounded-full  px-3 py-1.5 text-xs font-medium text-[#6e0b6c]">{symptom.label}</span>)}
+                                 {symptomRows.filter(symptom => symptom.value === 0).map(symptom => <span key={symptom.key} className="rounded-full px-3 py-1.5 text-xs font-medium text-[#6e0b6c]">{symptom.label}</span>)}
                               </div>
 
                            </MedicalSection>
@@ -472,7 +438,7 @@ export default function MedicalReport({ patient, menstruationValue, answers, hab
                                           <p className="mt-1 text-[10px] text-[#9ca3af]">{HABIT_VALUE_LABELS[habit.value] ?? `Valor ${habit.value}`}</p>
                                        </div>
 
-                                       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lgtext-xs font-bold text-[#6e0b6c] ">{habit.value}</span>
+                                       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-[#6e0b6c]">{habit.value}</span>
 
                                     </div>
                                  ))}
@@ -565,7 +531,7 @@ export default function MedicalReport({ patient, menstruationValue, answers, hab
                                           <p className="text-[10px] font-bold uppercase tracking-wide text-[#9ca3af]">Respuestas que activaron la orientación</p>
 
                                           <div className="mt-2 flex flex-wrap gap-2">
-                                             {clinicalReferral.psychology.triggeredSymptoms.map(key => <span key={key} className="rounded-full  px-3 py-1 text-xs font-semibold text-[#6e0b6c]">{SYMPTOM_LABELS[key] ?? formatKey(key)}</span>)}
+                                             {clinicalReferral.psychology.triggeredSymptoms.map(key => <span key={key} className="rounded-full px-3 py-1 text-xs font-semibold text-[#6e0b6c]">{SYMPTOM_LABELS[key] ?? formatKey(key)}</span>)}
                                           </div>
                                        </div>
                                     )}
@@ -622,7 +588,9 @@ export default function MedicalReport({ patient, menstruationValue, answers, hab
 
       </>
    );
-}
+});
+
+export default MedicalReport;
 
 
 // Sección

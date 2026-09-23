@@ -50,6 +50,9 @@ export default function MenoTestClient({ program }: Props) {
   // Puntaje total de síntomas
   const [score, setScore] = useState(0);
 
+  // ID de la evaluación guardada en el servidor (para envío de reportes)
+  const [evaluacionId, setEvaluacionId] = useState<number | null>(null);
+
   // Estado de la conexión a base de datos
   const [estadoBd, setEstadoBd] = useState<EstadoBaseDatos>('verificando');
   const [verificandoAlComenzar, setVerificandoAlComenzar] = useState(false);
@@ -134,8 +137,15 @@ export default function MenoTestClient({ program }: Props) {
             imcClasificacion: imcClasif,
           }),
         });
+
         if (!res.ok) {
           console.error('No se pudo guardar la evaluación en el servidor.');
+        } else {
+          // Guardamos el id que devuelve el endpoint para disparar el envío de reportes
+          const data = await res.json();
+          if (data?.ok && typeof data.evaluacionId === 'number') {
+            setEvaluacionId(data.evaluacionId);
+          }
         }
       } catch (error) {
         console.error('Error de red al guardar la evaluación:', error);
@@ -158,6 +168,7 @@ export default function MenoTestClient({ program }: Props) {
     setAnswers([]);
     setHabitAnswers([]);
     setScore(0);
+    setEvaluacionId(null);
     setStep('welcome');
 
     window.scrollTo({
@@ -220,6 +231,7 @@ export default function MenoTestClient({ program }: Props) {
           questions={testData.questions}
           score={score}
           program={program}
+          evaluacionId={evaluacionId}
           onRestart={restartTest}
         />
       )}

@@ -1,11 +1,11 @@
 'use client';
 
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Activity, Brain, Check, CircleGauge, Copy, Download, Dumbbell, HeartPulse, RotateCcw, Sparkles, Stethoscope, UserRound, Wind } from 'lucide-react';
 import { FaFacebookF, FaLinkedinIn, FaWhatsapp, FaXTwitter } from 'react-icons/fa6';
 
 import MenoTestHeader from './MenoTestHeader';
-import MedicalReport from './MedicalReport';
+import MedicalReport, { type MedicalReportHandle } from './MedicalReport';
 
 import type { Answer, HabitAnswer, Question } from '@/types/menotest';
 import type { PatientData } from '@/components/menotest/PatientForm';
@@ -16,6 +16,8 @@ import { analyzeSymptoms, getTopSymptoms } from '@/shared/data/categories';
 import { calculateAge, calculateIMC, calculateStage, classifyIMC } from '@/shared/data/scoring';
 import { getRecommendations, groupRecommendationsBySpecialist, type SpecialistKey } from '@/shared/data/recommendations';
 
+import { crearDocumentoPdf, agregarElementoAPdf, nombreArchivoSeguro } from '@/shared/pdf/generarPdf';
+
 
 interface Props {
   patient: PatientData;
@@ -25,6 +27,7 @@ interface Props {
   questions: Question[];
   score: number;
   program: MenoTestProgram;
+  evaluacionId?: number | null;
   onRestart: () => void;
 }
 
@@ -96,8 +99,7 @@ function getStageContent(stage: string, firstName: string): StageContent {
 
   const normalizedStage = stage.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-
-  // Menopausia precoz / prematura|
+  // Menopausia precoz / prematura
   if (normalizedStage.includes('precoz') || normalizedStage.includes('prematura')) {
     return {
       title: 'Probablemente estés atravesando una menopausia precoz o prematura.',
@@ -205,166 +207,162 @@ function getStageContent(stage: string, firstName: string): StageContent {
 }
 
 
-export default function Results({ patient, menstruationValue, answers, habitAnswers, questions, score, program, onRestart }: Props) {
+export default function Results({
+  patient,
+  menstruationValue,
+  answers,
+  habitAnswers,
+  questions,
+  score,
+  program,
+  evaluacionId,
+  onRestart,
+}: Props) {
 
   // Referencias PDF
   const resultSummaryRef = useRef<HTMLDivElement>(null);
   const resultRecommendationsRef = useRef<HTMLDivElement>(null);
+  const medicalReportRef = useRef<MedicalReportHandle>(null);
 
   // Estados
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [envioReportes, setEnvioReportes] = useState<'enviando' | 'enviado' | 'error' | null>(null);
 
 
-  // Descargar PDF
+  // ==================== GENERACIÓN DE PDFs ====================
+
+  /**
+   * Construye el PDF del reporte de usuario (resumen + recomendaciones).
+   * Cada sección se pinta en el PDF paginando automáticamente.
+   */
+  const construirReporteUsuarioPdf = async () => {
+    if (!resultSummaryRef.current || !resultRecommendationsRef.current) return null;
+
+    const pdf = await crearDocumentoPdf();
+    await agregarElementoAPdf(pdf, resultSummaryRef.current, { fondoColor: '#fafafa' });
+    await agregarElementoAPdf(pdf, resultRecommendationsRef.current, {
+      fondoColor: '#fafafa',
+      iniciarEnNuevaPagina: true,
+    });
+
+    return pdf;
+  };
+
+  /**
+   * Descarga el PDF del reporte de usuario al disco.
+   */
   const downloadPdf = async () => {
-
-    if (!resultSummaryRef.current || !resultRecommendationsRef.current || isGeneratingPdf) return;
+    if (isGeneratingPdf) return;
 
     try {
-
       setIsGeneratingPdf(true);
 
-      const [html2canvasModule, jsPDFModule] = await Promise.all([
-        import('html2canvas'),
-        import('jspdf')
-      ]);
+      const pdf = await construirReporteUsuarioPdf();
+      if (!pdf) return;
 
-      const html2canvas = html2canvasModule.default;
-      const jsPDF = jsPDFModule.jsPDF;
+      const patientFileName = nombreArchivoSeguro(
+        `${patient.name} ${patient.paternalLastName}`
+      );
 
-
-      // Crear PDF
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
-      const printableWidth = pageWidth - margin * 2;
-      const printableHeight = pageHeight - margin * 2;
-
-
-      // Agrega sección al PDF
-      const addSectionToPdf = async (element: HTMLDivElement, startOnNewPage: boolean) => {
-
-        const canvas = await html2canvas(element, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: '#fafafa',
-          logging: false,
-          windowWidth: element.scrollWidth
-        });
-
-        const pxPerMm = canvas.width / printableWidth;
-        const pageHeightPx = Math.floor(printableHeight * pxPerMm);
-
-        let renderedHeight = 0;
-        let localPageIndex = 0;
-
-        while (renderedHeight < canvas.height) {
-
-          if (startOnNewPage || localPageIndex > 0) {
-            pdf.addPage();
-            startOnNewPage = false;
-          }
-
-          const currentPageHeight = Math.min(pageHeightPx, canvas.height - renderedHeight);
-          const pageCanvas = document.createElement('canvas');
-
-          pageCanvas.width = canvas.width;
-          pageCanvas.height = currentPageHeight;
-
-          const context = pageCanvas.getContext('2d');
-
-          if (!context) break;
-
-          context.fillStyle = '#fafafa';
-          context.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-
-          context.drawImage(canvas, 0, renderedHeight, canvas.width, currentPageHeight, 0, 0, canvas.width, currentPageHeight);
-
-          const imageData = pageCanvas.toDataURL('image/jpeg', 0.95);
-          const imageHeightMm = currentPageHeight / pxPerMm;
-
-          pdf.addImage(imageData, 'JPEG', margin, margin, printableWidth, imageHeightMm);
-
-          renderedHeight += currentPageHeight;
-          localPageIndex++;
-        }
-      };
-
-
-      // Página 1
-      await addSectionToPdf(resultSummaryRef.current, false);
-
-      // Página 2
-      await addSectionToPdf(resultRecommendationsRef.current, true);
-
-
-      // Nombre PDF
-      const patientName = patient.name
-        .trim()
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '');
-
-      const fileName = patientName ? `menotest-${patientName}.pdf` : 'menotest-resultados.pdf';
-
-      pdf.save(fileName);
+      pdf.save(
+        patientFileName
+          ? `reporte-menotest-${patientFileName}.pdf`
+          : 'reporte-menotest.pdf'
+      );
 
     } catch (error) {
-
-      console.error('[MenoTest] Error generando PDF:', error);
-
+      console.error('[MenoTest] Error generando el reporte:', error);
     } finally {
-
       setIsGeneratingPdf(false);
     }
   };
 
 
-  // URL pública
+  // ==================== ENVÍO AUTOMÁTICO POR CORREO ====================
+
+  /**
+   * Envía ambos PDFs (reporte de usuario + reporte médico) al correo de la paciente.
+   * Se ejecuta una sola vez, apenas se muestran los resultados.
+   */
+  useEffect(() => {
+    if (!evaluacionId) return;
+
+    let cancelado = false;
+
+    const enviarReportes = async () => {
+      setEnvioReportes('enviando');
+
+      try {
+        const [pdfUsuario, pdfMedico] = await Promise.all([
+          construirReporteUsuarioPdf(),
+          medicalReportRef.current?.generarPdfBlob(),
+        ]);
+
+        if (!pdfUsuario) {
+          throw new Error('No se pudo generar el reporte de usuario');
+        }
+
+        const blobUsuario = pdfUsuario.output('blob') as Blob;
+        const base64Usuario = await blobToBase64(blobUsuario);
+        const base64Medico = pdfMedico ? await blobToBase64(pdfMedico) : null;
+
+        const res = await fetch('/api/evaluacion/enviar-reportes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            evaluacionId,
+            correo: patient.email,
+            nombre: patient.name,
+            reporteUsuarioPdf: base64Usuario,
+            reporteMedicoPdf: base64Medico,
+          }),
+        });
+
+        if (!cancelado) {
+          setEnvioReportes(res.ok ? 'enviado' : 'error');
+        }
+      } catch (error) {
+        console.error('[MenoTest] Error al enviar reportes por correo:', error);
+        if (!cancelado) setEnvioReportes('error');
+      }
+    };
+
+    enviarReportes();
+
+    return () => {
+      cancelado = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [evaluacionId]);
+
+
+  // ==================== COMPARTIR ====================
+
   const getShareUrl = () => `${window.location.origin}/menotest`;
   const shareText = 'Conoce más sobre tu etapa y bienestar con MenoTest.';
 
-
-  // Facebook
   const shareFacebook = () => {
     const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-
-  // WhatsApp
   const shareWhatsApp = () => {
     const message = `${shareText} ${getShareUrl()}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
   };
 
-
-  // X
   const shareX = () => {
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(getShareUrl())}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-
-  // LinkedIn
   const shareLinkedIn = () => {
     const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getShareUrl())}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-
-  // Copiar enlace
   const copyShareLink = async () => {
-
     try {
       await navigator.clipboard.writeText(getShareUrl());
       setShareCopied(true);
@@ -375,35 +373,26 @@ export default function Results({ patient, menstruationValue, answers, habitAnsw
   };
 
 
-  // Nombre
+  // ==================== DATOS DERIVADOS ====================
+
   const firstName = patient.name.trim().split(/\s+/)[0] || patient.name;
   const fullName = [patient.name, patient.paternalLastName, patient.maternalLastName].filter(Boolean).join(' ').trim();
 
-
-  // Edad
   const birthDate = [patient.birthYear, patient.birthMonth.padStart(2, '0'), patient.birthDay.padStart(2, '0')].join('-');
   const age = calculateAge(birthDate);
 
-
-  // IMC
   const weight = Number(patient.weight);
   const rawHeight = Number(patient.height);
   const heightMeters = rawHeight > 3 ? rawHeight / 100 : rawHeight;
   const imc = calculateIMC(weight, heightMeters);
   const imcClassification = classifyIMC(imc);
 
-
-  // Etapa
   const stageResult = calculateStage(menstruationValue, age, score);
   const stageContent = getStageContent(stageResult.stage, firstName);
 
-
-  // Síntomas
   const symptoms = analyzeSymptoms(answers, questions);
   const topSymptoms = getTopSymptoms(symptoms, 5);
 
-
-  // Recomendaciones
   const recommendations = getRecommendations(answers, habitAnswers, {
     maxTotal: 8,
     maxPerSpecialist: 2
@@ -415,8 +404,6 @@ export default function Results({ patient, menstruationValue, answers, habitAnsw
     .filter(([, items]) => items.length > 0)
     .sort(([a], [b]) => SPECIALIST_CONFIG[a].order - SPECIALIST_CONFIG[b].order);
 
-
-  // Derivación Organon
   const isIztapalapa = program === 'iztapalapa';
   const clinicalReferral = isIztapalapa ? evaluateClinicalReferral(answers, score) : null;
 
@@ -432,13 +419,32 @@ export default function Results({ patient, menstruationValue, answers, habitAnsw
 
       <div className="mx-auto max-w-6xl">
 
-
         {/* Header */}
         <MenoTestHeader program={program} />
 
 
+        {/* Aviso discreto de envío de reportes */}
+        {envioReportes === 'enviando' && (
+          <p className="mt-4 text-center text-sm text-[#6b7280]">
+            Enviando tus reportes a tu correo...
+          </p>
+        )}
+
+        {envioReportes === 'enviado' && (
+          <p className="mt-4 text-center text-sm font-medium text-[#197821]">
+            Tus reportes fueron enviados a {patient.email}.
+          </p>
+        )}
+
+        {envioReportes === 'error' && (
+          <p className="mt-4 text-center text-sm font-medium text-[#b91c1c]">
+            No pudimos enviar tus reportes automáticamente. Puedes descargarlos manualmente.
+          </p>
+        )}
+
+
         {/* PDF 1 */}
-        <div ref={resultSummaryRef} className="border-t-4 border-[#6e0b6c] pt-8">
+        <div ref={resultSummaryRef} className="mt-6 border-t-4 border-[#6e0b6c] pt-8">
 
           {/* Encabezado */}
           <header className="mb-10 text-center">
@@ -714,6 +720,7 @@ export default function Results({ patient, menstruationValue, answers, habitAnsw
 
 
           <MedicalReport
+            ref={medicalReportRef}
             patient={patient}
             menstruationValue={menstruationValue}
             answers={answers}
@@ -735,6 +742,24 @@ export default function Results({ patient, menstruationValue, answers, habitAnsw
 
     </main>
   );
+}
+
+
+// ==================== HELPERS ====================
+
+/**
+ * Convierte un Blob a base64 (sin el prefijo data:...).
+ */
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const resultado = reader.result as string;
+      resolve(resultado.split(',')[1]);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 }
 
 
@@ -806,133 +831,65 @@ function getSymptomLabel(key: string): string {
 // Descripción intensidad
 function getIntensityDescription(key: string, value: number): string {
 
-  // Energía
   if (key === 'energia') {
-
     switch (value) {
-      case 1:
-        return 'Has notado una ligera disminución de energía';
-
-      case 2:
-        return 'Has sentido falta de energía con frecuencia';
-
-      case 3:
-        return 'Has experimentado una disminución importante de energía';
-
-      default:
-        return 'No reportaste falta de energía';
+      case 1: return 'Has notado una ligera disminución de energía';
+      case 2: return 'Has sentido falta de energía con frecuencia';
+      case 3: return 'Has experimentado una disminución importante de energía';
+      default: return 'No reportaste falta de energía';
     }
   }
 
-
-  // Descanso
   if (key === 'dormir') {
-
     switch (value) {
-      case 1:
-        return 'Has notado algunas dificultades para descansar';
-
-      case 2:
-        return 'Las dificultades para descansar aparecen con frecuencia';
-
-      case 3:
-        return 'Has experimentado dificultades importantes para descansar';
-
-      default:
-        return 'No reportaste dificultades para descansar';
+      case 1: return 'Has notado algunas dificultades para descansar';
+      case 2: return 'Las dificultades para descansar aparecen con frecuencia';
+      case 3: return 'Has experimentado dificultades importantes para descansar';
+      default: return 'No reportaste dificultades para descansar';
     }
   }
 
-
-  // Concentración
   if (key === 'concentracion') {
-
     switch (value) {
-      case 1:
-        return 'Has notado algunas dificultades para concentrarte';
-
-      case 2:
-        return 'Te cuesta concentrarte con cierta frecuencia';
-
-      case 3:
-        return 'Has experimentado dificultades importantes para concentrarte';
-
-      default:
-        return 'No reportaste dificultades de concentración';
+      case 1: return 'Has notado algunas dificultades para concentrarte';
+      case 2: return 'Te cuesta concentrarte con cierta frecuencia';
+      case 3: return 'Has experimentado dificultades importantes para concentrarte';
+      default: return 'No reportaste dificultades de concentración';
     }
   }
 
-
-  // Memoria
   if (key === 'memoria') {
-
     switch (value) {
-      case 1:
-        return 'Has notado algunos olvidos ocasionales';
-
-      case 2:
-        return 'Los olvidos aparecen con cierta frecuencia';
-
-      case 3:
-        return 'Has experimentado dificultades importantes de memoria';
-
-      default:
-        return 'No reportaste dificultades de memoria';
+      case 1: return 'Has notado algunos olvidos ocasionales';
+      case 2: return 'Los olvidos aparecen con cierta frecuencia';
+      case 3: return 'Has experimentado dificultades importantes de memoria';
+      default: return 'No reportaste dificultades de memoria';
     }
   }
 
-
-  // Respiración
   if (key === 'respiracion') {
-
     switch (value) {
-      case 1:
-        return 'Has notado dificultad para respirar ocasionalmente';
-
-      case 2:
-        return 'La dificultad para respirar aparece con cierta frecuencia';
-
-      case 3:
-        return 'Has experimentado dificultad para respirar con mayor intensidad';
-
-      default:
-        return 'No reportaste dificultad para respirar';
+      case 1: return 'Has notado dificultad para respirar ocasionalmente';
+      case 2: return 'La dificultad para respirar aparece con cierta frecuencia';
+      case 3: return 'Has experimentado dificultad para respirar con mayor intensidad';
+      default: return 'No reportaste dificultad para respirar';
     }
   }
 
-
-  // Resequedad
   if (key === 'resequedad') {
-
     switch (value) {
-      case 1:
-        return 'Has notado resequedad de forma ocasional';
-
-      case 2:
-        return 'La resequedad aparece con cierta frecuencia';
-
-      case 3:
-        return 'Has experimentado resequedad de forma importante';
-
-      default:
-        return 'No reportaste resequedad';
+      case 1: return 'Has notado resequedad de forma ocasional';
+      case 2: return 'La resequedad aparece con cierta frecuencia';
+      case 3: return 'Has experimentado resequedad de forma importante';
+      default: return 'No reportaste resequedad';
     }
   }
 
-
-  // Resto
   switch (value) {
-    case 1:
-      return 'Lo notas de vez en cuando';
-
-    case 2:
-      return 'Lo experimentas con frecuencia';
-
-    case 3:
-      return 'Lo experimentas con mayor intensidad';
-
-    default:
-      return 'No reportaste este síntoma';
+    case 1: return 'Lo notas de vez en cuando';
+    case 2: return 'Lo experimentas con frecuencia';
+    case 3: return 'Lo experimentas con mayor intensidad';
+    default: return 'No reportaste este síntoma';
   }
 }
 
