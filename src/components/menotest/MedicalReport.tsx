@@ -271,320 +271,331 @@ const MedicalReport = forwardRef<MedicalReportHandle, Props>(function MedicalRep
          </button>
 
 
-         {/* Modal */}
-         {isOpen && (
-            <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/60 px-3 py-5 sm:px-6 sm:py-8">
+         {/*
+            Modal SIEMPRE montado en el DOM.
+            - Cuando isOpen = true: se muestra como overlay normal.
+            - Cuando isOpen = false: se posiciona fuera de la pantalla, sin interacción
+              y con opacidad 0. Así `reportRef.current` nunca es null y el PDF médico
+              puede generarse en segundo plano apenas se muestran los resultados.
+         */}
+         <div
+            aria-hidden={!isOpen}
+            className={
+               isOpen
+                  ? 'fixed inset-0 z-[100] overflow-y-auto bg-black/60 px-3 py-5 sm:px-6 sm:py-8'
+                  : 'pointer-events-none fixed left-[-9999px] top-0 opacity-0'
+            }
+         >
 
-               <div className="mx-auto max-w-6xl">
+            <div className="mx-auto max-w-6xl">
 
 
-                  {/* Controles */}
-                  <div className="sticky top-3 z-20 mb-4 flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-xl sm:flex-row sm:items-center sm:justify-between sm:px-5">
+               {/* Controles */}
+               <div className="sticky top-3 z-20 mb-4 flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-xl sm:flex-row sm:items-center sm:justify-between sm:px-5">
 
-                     <div>
-                        <p className="font-bold text-[#171717]">Vista previa del reporte médico</p>
-                        <p className="mt-1 text-xs text-[#6b7280]">Puedes revisar el contenido antes de descargarlo.</p>
-                     </div>
-
-
-                     <div className="flex flex-wrap gap-2">
-
-                        <button type="button" onClick={downloadMedicalReport} disabled={isGenerating} className="inline-flex items-center justify-center gap-2 rounded-full bg-[#6e0b6c] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#570956] disabled:cursor-not-allowed disabled:opacity-60">
-                           {isGenerating ? <LoaderCircle size={16} className="animate-spin" /> : <Download size={16} />}
-                           {isGenerating ? 'Generando...' : 'Descargar PDF'}
-                        </button>
-
-                        <button type="button" onClick={() => setIsOpen(false)} disabled={isGenerating} className="inline-flex items-center justify-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-5 py-2.5 text-sm font-semibold text-[#4b5563] transition hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-60">
-                           <X size={16} />
-                           Cerrar
-                        </button>
-
-                     </div>
-
+                  <div>
+                     <p className="font-bold text-[#171717]">Vista previa del reporte médico</p>
+                     <p className="mt-1 text-xs text-[#6b7280]">Puedes revisar el contenido antes de descargarlo.</p>
                   </div>
 
 
-                  {/* Fondo vista previa */}
-                  <div className="overflow-x-auto rounded-[28px] bg-[#d9d9d9] p-3 shadow-2xl sm:p-6">
+                  <div className="flex flex-wrap gap-2">
 
-                     {/* Documento */}
-                     <div ref={reportRef} className="mx-auto w-[900px] bg-white px-12 py-10 text-[#171717]">
+                     <button type="button" onClick={downloadMedicalReport} disabled={isGenerating} className="inline-flex items-center justify-center gap-2 rounded-full bg-[#6e0b6c] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#570956] disabled:cursor-not-allowed disabled:opacity-60">
+                        {isGenerating ? <LoaderCircle size={16} className="animate-spin" /> : <Download size={16} />}
+                        {isGenerating ? 'Generando...' : 'Descargar PDF'}
+                     </button>
+
+                     <button type="button" onClick={() => setIsOpen(false)} disabled={isGenerating} className="inline-flex items-center justify-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-5 py-2.5 text-sm font-semibold text-[#4b5563] transition hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-60">
+                        <X size={16} />
+                        Cerrar
+                     </button>
+
+                  </div>
+
+               </div>
 
 
-                        {/* Encabezado */}
-                        <header className="border-b-4 border-[#6e0b6c] pb-6">
+               {/* Fondo vista previa */}
+               <div className="overflow-x-auto rounded-[28px] bg-[#d9d9d9] p-3 shadow-2xl sm:p-6">
 
-                           <div className="flex items-center justify-between gap-8">
+                  {/* Documento — SIEMPRE montado, es el que se convierte a PDF */}
+                  <div ref={reportRef} className="mx-auto w-[900px] bg-white px-12 py-10 text-[#171717]">
 
-                              <div>
-                                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8d2a8a]">MenoTest</p>
-                                 <h1 className="mt-2 text-3xl font-bold text-[#171717]">Reporte para profesional de salud</h1>
-                                 <p className="mt-2 text-sm leading-6 text-[#6b7280]">Resumen estructurado de las respuestas proporcionadas durante la evaluación.</p>
-                              </div>
 
-                              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#f5eaf5] text-[#6e0b6c]">
-                                 <Stethoscope size={27} />
-                              </div>
+                     {/* Encabezado */}
+                     <header className="border-b-4 border-[#6e0b6c] pb-6">
 
+                        <div className="flex items-center justify-between gap-8">
+
+                           <div>
+                              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8d2a8a]">MenoTest</p>
+                              <h1 className="mt-2 text-3xl font-bold text-[#171717]">Reporte para profesional de salud</h1>
+                              <p className="mt-2 text-sm leading-6 text-[#6b7280]">Resumen estructurado de las respuestas proporcionadas durante la evaluación.</p>
                            </div>
 
-                        </header>
-
-
-                        {/* Datos paciente */}
-                        <MedicalSection number="1" title="Datos de la paciente">
-
-                           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-                              <MedicalData label="Nombre" value={fullName || '—'} />
-                              <MedicalData label="Edad" value={age > 0 ? `${age} años` : '—'} />
-                              <MedicalData label="Correo electrónico" value={patient.email || '—'} />
-                              <MedicalData label="Fecha de nacimiento" value={formattedBirthDate} />
-                              <MedicalData label="Estatura" value={rawHeight > 0 ? `${rawHeight} cm` : '—'} />
-                              <MedicalData label="Peso" value={weight > 0 ? `${weight} kg` : '—'} />
-                              <MedicalData label="IMC" value={imc > 0 ? imc.toFixed(1) : '—'} />
-                              <MedicalData label="Clasificación IMC" value={imc > 0 ? imcClassification : '—'} />
+                           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#f5eaf5] text-[#6e0b6c]">
+                              <Stethoscope size={27} />
                            </div>
 
-                        </MedicalSection>
+                        </div>
+
+                     </header>
 
 
-                        {/* Contexto menstrual */}
-                        <MedicalSection number="2" title="Contexto menstrual">
+                     {/* Datos paciente */}
+                     <MedicalSection number="1" title="Datos de la paciente">
 
-                           <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                           <MedicalData label="Nombre" value={fullName || '—'} />
+                           <MedicalData label="Edad" value={age > 0 ? `${age} años` : '—'} />
+                           <MedicalData label="Correo electrónico" value={patient.email || '—'} />
+                           <MedicalData label="Fecha de nacimiento" value={formattedBirthDate} />
+                           <MedicalData label="Estatura" value={rawHeight > 0 ? `${rawHeight} cm` : '—'} />
+                           <MedicalData label="Peso" value={weight > 0 ? `${weight} kg` : '—'} />
+                           <MedicalData label="IMC" value={imc > 0 ? imc.toFixed(1) : '—'} />
+                           <MedicalData label="Clasificación IMC" value={imc > 0 ? imcClassification : '—'} />
+                        </div>
 
-                              <div className="rounded-2xl border border-[#eadfea] bg-[#fcf9fc] p-5">
-                                 <p className="text-xs font-bold uppercase tracking-wide text-[#8d2a8a]">Situación reportada</p>
-                                 <p className="mt-2 text-base font-semibold leading-6 text-[#171717]">{menstruationLabel}</p>
-                              </div>
+                     </MedicalSection>
 
-                              <div className="rounded-2xl border border-[#eadfea] bg-[#fcf9fc] p-5">
-                                 <p className="text-xs font-bold uppercase tracking-wide text-[#8d2a8a]">Etapa orientativa</p>
-                                 <p className="mt-2 text-base font-semibold leading-6 text-[#171717]">{stageResult.stage}</p>
-                              </div>
 
+                     {/* Contexto menstrual */}
+                     <MedicalSection number="2" title="Contexto menstrual">
+
+                        <div className="grid grid-cols-2 gap-4">
+
+                           <div className="rounded-2xl border border-[#eadfea] bg-[#fcf9fc] p-5">
+                              <p className="text-xs font-bold uppercase tracking-wide text-[#8d2a8a]">Situación reportada</p>
+                              <p className="mt-2 text-base font-semibold leading-6 text-[#171717]">{menstruationLabel}</p>
                            </div>
 
-                        </MedicalSection>
+                           <div className="rounded-2xl border border-[#eadfea] bg-[#fcf9fc] p-5">
+                              <p className="text-xs font-bold uppercase tracking-wide text-[#8d2a8a]">Etapa orientativa</p>
+                              <p className="mt-2 text-base font-semibold leading-6 text-[#171717]">{stageResult.stage}</p>
+                           </div>
+
+                        </div>
+
+                     </MedicalSection>
 
 
-                        {/* Síntomas */}
-                        <MedicalSection number="3" title="Síntomas reportados">
+                     {/* Síntomas */}
+                     <MedicalSection number="3" title="Síntomas reportados">
 
-                           <p className="mb-5 text-sm leading-6 text-[#6b7280]">Las respuestas se muestran ordenadas de mayor a menor intensidad. La escala utilizada es Nada = 0, Poco = 1, Bastante = 2 y Mucho = 3.</p>
+                        <p className="mb-5 text-sm leading-6 text-[#6b7280]">Las respuestas se muestran ordenadas de mayor a menor intensidad. La escala utilizada es Nada = 0, Poco = 1, Bastante = 2 y Mucho = 3.</p>
 
-                           {activeSymptoms.length > 0 ? (
+                        {activeSymptoms.length > 0 ? (
 
-                              <div className="overflow-hidden rounded-2xl border border-[#e5e7eb]">
+                           <div className="overflow-hidden rounded-2xl border border-[#e5e7eb]">
 
-                                 <div className="grid grid-cols-[1fr_180px_120px] bg-[#f8f1f8] px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-[#6e0b6c]">
-                                    <span>Síntoma evaluado</span>
-                                    <span>Área</span>
-                                    <span>Intensidad</span>
+                              <div className="grid grid-cols-[1fr_180px_120px] bg-[#f8f1f8] px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-[#6e0b6c]">
+                                 <span>Síntoma evaluado</span>
+                                 <span>Área</span>
+                                 <span>Intensidad</span>
+                              </div>
+
+                              {activeSymptoms.map(symptom => (
+                                 <div key={symptom.key} className="grid grid-cols-[1fr_180px_120px] items-center border-t border-[#eeeeee] px-4 py-3 text-xs">
+
+                                    <span className="pr-4 font-medium leading-5 text-[#374151]">{symptom.label}</span>
+
+                                    <span className="pr-4 text-[#6b7280]">{symptom.categoryLabel}</span>
+
+                                    <span className="font-semibold text-[#171717]">{symptom.intensity} · {symptom.value}</span>
+
                                  </div>
+                              ))}
 
-                                 {activeSymptoms.map(symptom => (
-                                    <div key={symptom.key} className="grid grid-cols-[1fr_180px_120px] items-center border-t border-[#eeeeee] px-4 py-3 text-xs">
+                           </div>
 
-                                       <span className="pr-4 font-medium leading-5 text-[#374151]">{symptom.label}</span>
+                        ) : (
 
-                                       <span className="pr-4 text-[#6b7280]">{symptom.categoryLabel}</span>
+                           <div className="rounded-2xl bg-[#fafafa] p-5">
+                              <p className="text-sm text-[#6b7280]">No se reportaron síntomas con intensidad mayor a cero.</p>
+                           </div>
 
-                                       <span className="font-semibold text-[#171717]">{symptom.intensity} · {symptom.value}</span>
-
-                                    </div>
-                                 ))}
-
-                              </div>
-
-                           ) : (
-
-                              <div className="rounded-2xl bg-[#fafafa] p-5">
-                                 <p className="text-sm text-[#6b7280]">No se reportaron síntomas con intensidad mayor a cero.</p>
-                              </div>
-
-                           )}
-
-                        </MedicalSection>
-
-
-                        {/* Sin síntomas */}
-                        {intensityDistribution.none > 0 && (
-                           <MedicalSection number="4" title="Síntomas sin presencia reportada">
-
-                              <div className="flex flex-wrap gap-2">
-                                 {symptomRows.filter(symptom => symptom.value === 0).map(symptom => <span key={symptom.key} className="rounded-full px-3 py-1.5 text-xs font-medium text-[#6e0b6c]">{symptom.label}</span>)}
-                              </div>
-
-                           </MedicalSection>
                         )}
 
-
-                        {/* Hábitos */}
-                        <MedicalSection number="5" title="Hábitos reportados">
-
-                           <p className="mb-5 text-sm leading-6 text-[#6b7280]">Los hábitos se muestran como información complementaria y no forman parte de la puntuación global de síntomas.</p>
+                     </MedicalSection>
 
 
-                           {sortedHabits.length > 0 ? (
+                     {/* Sin síntomas */}
+                     {intensityDistribution.none > 0 && (
+                        <MedicalSection number="4" title="Síntomas sin presencia reportada">
 
-                              <div className="grid grid-cols-2 gap-3">
-
-                                 {sortedHabits.map(habit => (
-                                    <div key={habit.habitId} className="flex items-center justify-between gap-4 rounded-xl border border-[#eeeeee] bg-[#fafafa] px-4 py-3">
-
-                                       <div>
-                                          <p className="text-xs font-semibold text-[#374151]">{HABIT_LABELS[habit.habitId] ?? formatKey(habit.habitId)}</p>
-                                          <p className="mt-1 text-[10px] text-[#9ca3af]">{HABIT_VALUE_LABELS[habit.value] ?? `Valor ${habit.value}`}</p>
-                                       </div>
-
-                                       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-[#6e0b6c]">{habit.value}</span>
-
-                                    </div>
-                                 ))}
-
-                              </div>
-
-                           ) : (
-
-                              <p className="text-sm text-[#6b7280]">No se encontraron respuestas de hábitos.</p>
-
-                           )}
+                           <div className="flex flex-wrap gap-2">
+                              {symptomRows.filter(symptom => symptom.value === 0).map(symptom => <span key={symptom.key} className="rounded-full px-3 py-1.5 text-xs font-medium text-[#6e0b6c]">{symptom.label}</span>)}
+                           </div>
 
                         </MedicalSection>
+                     )}
 
 
-                        {/* Orientación clínica Organon */}
-                        {isIztapalapa && clinicalReferral && (
-                           <MedicalSection number="6" title="Orientación de atención">
+                     {/* Hábitos */}
+                     <MedicalSection number="5" title="Hábitos reportados">
 
-                              <p className="mb-5 text-sm leading-6 text-[#6b7280]">Las siguientes rutas se activan mediante las reglas de tamizaje configuradas para este programa. Su activación no representa un diagnóstico.</p>
-
-
-                              <div className="grid grid-cols-3 gap-4">
-                                 <MedicalReferralCard icon={Stethoscope} letter="M" label="Medicina General" active={clinicalReferral.generalMedicine.requiresAttention} />
-                                 <MedicalReferralCard icon={HeartPulse} letter="G" label="Ginecología" active={clinicalReferral.gynecology.requiresAttention} />
-                                 <MedicalReferralCard icon={Brain} letter="P" label="Psicología" active={clinicalReferral.psychology.requiresAttention} />
-                              </div>
+                        <p className="mb-5 text-sm leading-6 text-[#6b7280]">Los hábitos se muestran como información complementaria y no forman parte de la puntuación global de síntomas.</p>
 
 
-                              {/* Medicina General */}
-                              {clinicalReferral.generalMedicine.requiresAttention && (
-                                 <div className="mt-5 rounded-2xl border border-[#eadfea] p-5">
+                        {sortedHabits.length > 0 ? (
 
-                                    <div className="flex items-center gap-3">
-                                       <Stethoscope size={18} className="text-[#6e0b6c]" />
-                                       <p className="font-bold text-[#171717]">Medicina General</p>
+                           <div className="grid grid-cols-2 gap-3">
+
+                              {sortedHabits.map(habit => (
+                                 <div key={habit.habitId} className="flex items-center justify-between gap-4 rounded-xl border border-[#eeeeee] bg-[#fafafa] px-4 py-3">
+
+                                    <div>
+                                       <p className="text-xs font-semibold text-[#374151]">{HABIT_LABELS[habit.habitId] ?? formatKey(habit.habitId)}</p>
+                                       <p className="mt-1 text-[10px] text-[#9ca3af]">{HABIT_VALUE_LABELS[habit.value] ?? `Valor ${habit.value}`}</p>
                                     </div>
 
-                                    <div className="mt-4 grid grid-cols-2 gap-4">
-                                       <MedicalData label="Puntaje de tamizaje" value={`${clinicalReferral.generalMedicine.score} / 18`} />
-                                       <MedicalData label="Atención prioritaria" value={clinicalReferral.generalMedicine.priority ? 'Sí' : 'No'} />
-                                    </div>
-
-                                    {clinicalReferral.generalMedicine.triggeredByBreathing && (
-                                       <p className="mt-4 rounded-xl bg-[#f8f1f8] px-4 py-3 text-xs leading-5 text-[#6b7280]">La ruta también se activó por la respuesta registrada en dificultad para respirar.</p>
-                                    )}
+                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-[#6e0b6c]">{habit.value}</span>
 
                                  </div>
-                              )}
+                              ))}
+
+                           </div>
+
+                        ) : (
+
+                           <p className="text-sm text-[#6b7280]">No se encontraron respuestas de hábitos.</p>
+
+                        )}
+
+                     </MedicalSection>
 
 
-                              {/* Ginecología */}
-                              {clinicalReferral.gynecology.requiresAttention && (
-                                 <div className="mt-4 rounded-2xl border border-[#eadfea] p-5">
+                     {/* Orientación clínica Organon */}
+                     {isIztapalapa && clinicalReferral && (
+                        <MedicalSection number="6" title="Orientación de atención">
 
-                                    <div className="flex items-center gap-3">
-                                       <HeartPulse size={18} className="text-[#6e0b6c]" />
-                                       <p className="font-bold text-[#171717]">Ginecología</p>
-                                    </div>
+                           <p className="mb-5 text-sm leading-6 text-[#6b7280]">Las siguientes rutas se activan mediante las reglas de tamizaje configuradas para este programa. Su activación no representa un diagnóstico.</p>
 
+
+                           <div className="grid grid-cols-3 gap-4">
+                              <MedicalReferralCard icon={Stethoscope} letter="M" label="Medicina General" active={clinicalReferral.generalMedicine.requiresAttention} />
+                              <MedicalReferralCard icon={HeartPulse} letter="G" label="Ginecología" active={clinicalReferral.gynecology.requiresAttention} />
+                              <MedicalReferralCard icon={Brain} letter="P" label="Psicología" active={clinicalReferral.psychology.requiresAttention} />
+                           </div>
+
+
+                           {/* Medicina General */}
+                           {clinicalReferral.generalMedicine.requiresAttention && (
+                              <div className="mt-5 rounded-2xl border border-[#eadfea] p-5">
+
+                                 <div className="flex items-center gap-3">
+                                    <Stethoscope size={18} className="text-[#6e0b6c]" />
+                                    <p className="font-bold text-[#171717]">Medicina General</p>
+                                 </div>
+
+                                 <div className="mt-4 grid grid-cols-2 gap-4">
+                                    <MedicalData label="Puntaje de tamizaje" value={`${clinicalReferral.generalMedicine.score} / 18`} />
+                                    <MedicalData label="Atención prioritaria" value={clinicalReferral.generalMedicine.priority ? 'Sí' : 'No'} />
+                                 </div>
+
+                                 {clinicalReferral.generalMedicine.triggeredByBreathing && (
+                                    <p className="mt-4 rounded-xl bg-[#f8f1f8] px-4 py-3 text-xs leading-5 text-[#6b7280]">La ruta también se activó por la respuesta registrada en dificultad para respirar.</p>
+                                 )}
+
+                              </div>
+                           )}
+
+
+                           {/* Ginecología */}
+                           {clinicalReferral.gynecology.requiresAttention && (
+                              <div className="mt-4 rounded-2xl border border-[#eadfea] p-5">
+
+                                 <div className="flex items-center gap-3">
+                                    <HeartPulse size={18} className="text-[#6e0b6c]" />
+                                    <p className="font-bold text-[#171717]">Ginecología</p>
+                                 </div>
+
+                                 <div className="mt-4">
+                                    <MedicalData label="Criterio de activación" value={getGynecologyReason(clinicalReferral.gynecology.triggeredByTotalScore, clinicalReferral.gynecology.triggeredByRescue)} />
+                                 </div>
+
+                                 {clinicalReferral.gynecology.triggeredByRescue && clinicalReferral.gynecology.rescueSymptoms.length > 0 && (
                                     <div className="mt-4">
-                                       <MedicalData label="Criterio de activación" value={getGynecologyReason(clinicalReferral.gynecology.triggeredByTotalScore, clinicalReferral.gynecology.triggeredByRescue)} />
-                                    </div>
+                                       <p className="text-[10px] font-bold uppercase tracking-wide text-[#9ca3af]">Síntomas involucrados en criterio de rescate</p>
 
-                                    {clinicalReferral.gynecology.triggeredByRescue && clinicalReferral.gynecology.rescueSymptoms.length > 0 && (
-                                       <div className="mt-4">
-                                          <p className="text-[10px] font-bold uppercase tracking-wide text-[#9ca3af]">Síntomas involucrados en criterio de rescate</p>
-
-                                          <div className="mt-2 flex flex-wrap gap-2">
-                                             {clinicalReferral.gynecology.rescueSymptoms.map(key => <span key={key} className="rounded-full bg-[#f8f1f8] px-3 py-1 text-xs font-semibold text-[#6e0b6c]">{SYMPTOM_LABELS[key] ?? formatKey(key)}</span>)}
-                                          </div>
+                                       <div className="mt-2 flex flex-wrap gap-2">
+                                          {clinicalReferral.gynecology.rescueSymptoms.map(key => <span key={key} className="rounded-full bg-[#f8f1f8] px-3 py-1 text-xs font-semibold text-[#6e0b6c]">{SYMPTOM_LABELS[key] ?? formatKey(key)}</span>)}
                                        </div>
-                                    )}
-
-                                 </div>
-                              )}
-
-
-                              {/* Psicología */}
-                              {clinicalReferral.psychology.requiresAttention && (
-                                 <div className="mt-4 rounded-2xl border border-[#eadfea] p-5">
-
-                                    <div className="flex items-center gap-3">
-                                       <Brain size={18} className="text-[#6e0b6c]" />
-                                       <p className="font-bold text-[#171717]">Psicología</p>
                                     </div>
-
-                                    {clinicalReferral.psychology.triggeredSymptoms.length > 0 && (
-                                       <div className="mt-4">
-                                          <p className="text-[10px] font-bold uppercase tracking-wide text-[#9ca3af]">Respuestas que activaron la orientación</p>
-
-                                          <div className="mt-2 flex flex-wrap gap-2">
-                                             {clinicalReferral.psychology.triggeredSymptoms.map(key => <span key={key} className="rounded-full px-3 py-1 text-xs font-semibold text-[#6e0b6c]">{SYMPTOM_LABELS[key] ?? formatKey(key)}</span>)}
-                                          </div>
-                                       </div>
-                                    )}
-
-                                 </div>
-                              )}
-
-                           </MedicalSection>
-                        )}
-
-
-                        {/* Observaciones */}
-                        <MedicalSection number={isIztapalapa ? '7' : '6'} title="Consideraciones para valoración">
-
-                           <div className="rounded-2xl bg-[#f8f1f8] p-5">
-
-                              <div className="flex items-start gap-3">
-
-                                 <Activity size={19} className="mt-0.5 shrink-0 text-[#6e0b6c]" />
-
-                                 <p className="text-sm leading-6 text-[#4b5563]">Se sugiere revisar los síntomas y hábitos reportados en conjunto con antecedentes personales, antecedentes ginecológicos, tratamientos actuales, exploración física y criterio clínico del profesional de salud.</p>
+                                 )}
 
                               </div>
+                           )}
 
-                           </div>
+
+                           {/* Psicología */}
+                           {clinicalReferral.psychology.requiresAttention && (
+                              <div className="mt-4 rounded-2xl border border-[#eadfea] p-5">
+
+                                 <div className="flex items-center gap-3">
+                                    <Brain size={18} className="text-[#6e0b6c]" />
+                                    <p className="font-bold text-[#171717]">Psicología</p>
+                                 </div>
+
+                                 {clinicalReferral.psychology.triggeredSymptoms.length > 0 && (
+                                    <div className="mt-4">
+                                       <p className="text-[10px] font-bold uppercase tracking-wide text-[#9ca3af]">Respuestas que activaron la orientación</p>
+
+                                       <div className="mt-2 flex flex-wrap gap-2">
+                                          {clinicalReferral.psychology.triggeredSymptoms.map(key => <span key={key} className="rounded-full px-3 py-1 text-xs font-semibold text-[#6e0b6c]">{SYMPTOM_LABELS[key] ?? formatKey(key)}</span>)}
+                                       </div>
+                                    </div>
+                                 )}
+
+                              </div>
+                           )}
 
                         </MedicalSection>
+                     )}
 
 
-                        {/* Disclaimer */}
-                        <footer className="mt-10 border-t border-[#e5e7eb] pt-6">
+                     {/* Observaciones */}
+                     <MedicalSection number={isIztapalapa ? '7' : '6'} title="Consideraciones para valoración">
+
+                        <div className="rounded-2xl bg-[#f8f1f8] p-5">
 
                            <div className="flex items-start gap-3">
 
-                              <Check size={17} className="mt-0.5 shrink-0 text-[#6e0b6c]" />
+                              <Activity size={19} className="mt-0.5 shrink-0 text-[#6e0b6c]" />
 
-                              <div>
-                                 <p className="text-xs font-semibold text-[#374151]">Documento de apoyo para valoración profesional</p>
-                                 <p className="mt-1 text-[11px] leading-5 text-[#9ca3af]">Este reporte resume las respuestas proporcionadas por la paciente y, cuando corresponde, las reglas de tamizaje configuradas en MenoTest. No constituye diagnóstico, prescripción ni sustituye la valoración de un profesional de salud.</p>
-                              </div>
+                              <p className="text-sm leading-6 text-[#4b5563]">Se sugiere revisar los síntomas y hábitos reportados en conjunto con antecedentes personales, antecedentes ginecológicos, tratamientos actuales, exploración física y criterio clínico del profesional de salud.</p>
 
                            </div>
 
-                        </footer>
+                        </div>
 
-                     </div>
+                     </MedicalSection>
+
+
+                     {/* Disclaimer */}
+                     <footer className="mt-10 border-t border-[#e5e7eb] pt-6">
+
+                        <div className="flex items-start gap-3">
+
+                           <Check size={17} className="mt-0.5 shrink-0 text-[#6e0b6c]" />
+
+                           <div>
+                              <p className="text-xs font-semibold text-[#374151]">Documento de apoyo para valoración profesional</p>
+                              <p className="mt-1 text-[11px] leading-5 text-[#9ca3af]">Este reporte resume las respuestas proporcionadas por la paciente y, cuando corresponde, las reglas de tamizaje configuradas en MenoTest. No constituye diagnóstico, prescripción ni sustituye la valoración de un profesional de salud.</p>
+                           </div>
+
+                        </div>
+
+                     </footer>
 
                   </div>
 
                </div>
 
             </div>
-         )}
+
+         </div>
 
       </>
    );

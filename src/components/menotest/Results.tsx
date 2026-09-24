@@ -224,6 +224,10 @@ export default function Results({
   const resultRecommendationsRef = useRef<HTMLDivElement>(null);
   const medicalReportRef = useRef<MedicalReportHandle>(null);
 
+  // Bandera anti-duplicado: garantiza que el envío por correo se dispare una sola vez,
+  // incluso si React StrictMode monta/desmonta el componente dos veces en desarrollo.
+  const yaEnviadoRef = useRef(false);
+
   // Estados
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
@@ -284,11 +288,13 @@ export default function Results({
   /**
    * Envía ambos PDFs (reporte de usuario + reporte médico) al correo de la paciente.
    * Se ejecuta una sola vez, apenas se muestran los resultados.
+   *
+   * La bandera `yaEnviadoRef` evita que React StrictMode dispare dos veces
+   * la petición de red al montar el componente en desarrollo.
    */
   useEffect(() => {
-    if (!evaluacionId) return;
-
-    let cancelado = false;
+    if (!evaluacionId || yaEnviadoRef.current) return;
+    yaEnviadoRef.current = true;
 
     const enviarReportes = async () => {
       setEnvioReportes('enviando');
@@ -319,20 +325,14 @@ export default function Results({
           }),
         });
 
-        if (!cancelado) {
-          setEnvioReportes(res.ok ? 'enviado' : 'error');
-        }
+        setEnvioReportes(res.ok ? 'enviado' : 'error');
       } catch (error) {
         console.error('[MenoTest] Error al enviar reportes por correo:', error);
-        if (!cancelado) setEnvioReportes('error');
+        setEnvioReportes('error');
       }
     };
 
     enviarReportes();
-
-    return () => {
-      cancelado = true;
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [evaluacionId]);
 
