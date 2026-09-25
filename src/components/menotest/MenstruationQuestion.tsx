@@ -79,9 +79,9 @@ export default function MenstruationQuestion({ value, onChange }: Props) {
 
 
          {/* Pregunta */}
-         <div className="mb-8">
+         <div className="mb-2">
 
-            <h2 className="text-2xl font-semibold leading-tight tracking-tight text-[#171717] sm:text-3xl">
+            <h2 className="text-xl font-semibold leading-tight tracking-tight text-[#171717] sm:text-3xl">
                ¿Cuál de las siguientes opciones describe mejor tu situación menstrual actual?
             </h2>
 
@@ -93,7 +93,7 @@ export default function MenstruationQuestion({ value, onChange }: Props) {
 
 
          {/* Opciones */}
-         <div className="space-y-3">
+         <div className="space-y-1">
 
             {options.map(option => {
 

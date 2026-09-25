@@ -25,7 +25,7 @@ export default function Question({ question, mainOptions, answer, onMainAnswer }
 
 
          {/* Pregunta */}
-         <h2 className="max-w-3xl text-2xl font-bold leading-tight text-[#171717] sm:text-3xl">
+         <h2 className="max-w-3xl text-xl font-bold leading-tight text-[#171717] sm:text-3xl">
             {question.question}
          </h2>
 
@@ -35,7 +35,7 @@ export default function Question({ question, mainOptions, answer, onMainAnswer }
 
 
          {/* Opciones */}
-         <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
+         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
 
             {mainOptions.map(option => {
 
@@ -46,7 +46,7 @@ export default function Question({ question, mainOptions, answer, onMainAnswer }
                      key={option.id}
                      type="button"
                      onClick={() => onMainAnswer(option)}
-                     className={`group relative flex min-h-[82px] items-center justify-between gap-4 rounded-2xl border px-5 py-4 text-left transition duration-200 ${isSelected ? 'border-[#6e0b6c] bg-[#f8f0f8] shadow-[0_10px_30px_rgba(110,11,108,.08)]' : 'border-[#e5e7eb] bg-white hover:-translate-y-0.5 hover:border-[#6e0b6c]/30 hover:bg-[#fcf9fc] hover:shadow-md'}`}
+                     className={`group relative flex min-h-[65px] items-center justify-between gap-4 rounded-2xl border px-2 py-2 text-left transition duration-200 ${isSelected ? 'border-[#6e0b6c] bg-[#f8f0f8] shadow-[0_10px_30px_rgba(110,11,108,.08)]' : 'border-[#e5e7eb] bg-white hover:-translate-y-0.5 hover:border-[#6e0b6c]/30 hover:bg-[#fcf9fc] hover:shadow-md'}`}
                   >
 
                      <div>

@@ -269,7 +269,7 @@ export default function Quiz({ data, onFinish, onBack, program }: Props) {
             )}
 
             {/* Navegación */}
-            <div className="mt-10 flex flex-col-reverse gap-3 border-t border-[#eee8ee] pt-7 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mt-4 flex flex-col-reverse gap-3 border-t border-[#eee8ee] pt-4 sm:flex-row sm:items-center sm:justify-between">
 
               <button type="button" onClick={handlePrevious} className="inline-flex items-center justify-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-6 py-3.5 text-sm font-semibold text-[#6b7280] transition hover:border-[#6e0b6c]/30 hover:bg-[#faf7fa] hover:text-[#6e0b6c]">
                 <ArrowLeft size={18} />
