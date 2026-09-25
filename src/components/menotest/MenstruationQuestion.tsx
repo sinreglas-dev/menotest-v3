@@ -16,6 +16,53 @@ interface Props {
 
 
 // Opciones
+// const options: MenstruationOption[] = [
+//    {
+//       id: 'regular',
+//       label: 'Tengo menstruaciones regulares',
+//       description: 'Mi periodo continúa presentándose de forma regular.'
+//    },
+//    {
+//       id: 'irregular',
+//       label: 'Tengo menstruaciones irregulares',
+//       description: 'He tenido uno o varios períodos en los últimos 12 meses.'
+//    },
+//    {
+//       id: 'trh_sangrado',
+//       label: 'Estoy tomando THR y hormonas (ej. anticonceptivos)',
+//       description: 'Esto me prodcue sangrados irregulares.'
+//    },
+//    {
+//       id: 'stopped',
+//       label: 'Mi menstruación se ha detenido',
+//       description: 'Ocurrio naturalmente hace más de 1 año.'
+//    },
+//    {
+//       id: 'trh_detenida',
+//       label: 'Estoy tomando THR y hormonas que detuvieron mi menstruación',
+//       description: 'Ej. anticonceptivos orales, hormonas, implante o inyección hormonal.'
+//    },
+//    {
+//       id: 'histerectomia_ovarios',
+//       label: 'Tuve una histerectomía (extirpoación de útero)',
+//       description: 'Pero conservo 1 o ambos ovarios.'
+//    },
+//    {
+//       id: 'histerectomia_sin_ovarios',
+//       label: 'Tuve una histerectomía (extirpoación de útero)',
+//       description: 'Me removieronambos ovarios y estoy tomando TRH.'
+//    },
+//    {
+//       id: 'medicamentos',
+//       label: 'Mi menstruación se detuvo.',
+//       description: 'Estoy tomando otros medicamentos para detener mi menstruación.'
+//    },
+//    {
+//       id: 'cancer',
+//       label: 'Mi menstruación cambió o se detuvo',
+//       description: 'He recibido un tratamiento contra el cáncer que afectó mi menstruación.'
+//    }
+// ];
 const options: MenstruationOption[] = [
    {
       id: 'regular',
@@ -25,36 +72,36 @@ const options: MenstruationOption[] = [
    {
       id: 'irregular',
       label: 'Tengo menstruaciones irregulares',
-      description: 'He tenido uno o varios períodos en los últimos 12 meses.'
+      description: 'He tenido uno o varios periodos en los últimos 12 meses.'
    },
    {
       id: 'trh_sangrado',
-      label: 'Estoy tomando THR y hormonas (ej. anticonceptivos)',
-      description: 'Esto me prodcue sangrados irregulares.'
+      label: 'Estoy tomando TRH y hormonas (ej. anticonceptivos)',
+      description: 'Esto me produce sangrados irregulares.'
    },
    {
       id: 'stopped',
       label: 'Mi menstruación se ha detenido',
-      description: 'Ocurrio naturalmente hace más de 1 año.'
+      description: 'Ocurrió naturalmente hace más de 1 año.'
    },
    {
       id: 'trh_detenida',
-      label: 'Estoy tomando THR y hormonas que detuvieron mi menstruación',
+      label: 'Estoy tomando TRH y hormonas que detuvieron mi menstruación',
       description: 'Ej. anticonceptivos orales, hormonas, implante o inyección hormonal.'
    },
    {
       id: 'histerectomia_ovarios',
-      label: 'Tuve una histerectomía (extirpoación de útero)',
-      description: 'Pero conservo 1 o ambos ovarios.'
+      label: 'Tuve una histerectomía (extirpación del útero)',
+      description: 'Pero conservo uno o ambos ovarios.'
    },
    {
       id: 'histerectomia_sin_ovarios',
-      label: 'Tuve una histerectomía (extirpoación de útero)',
-      description: 'Me removieronambos ovarios y estoy tomando TRH.'
+      label: 'Tuve una histerectomía (extirpación del útero)',
+      description: 'Me removieron ambos ovarios y estoy tomando TRH.'
    },
    {
       id: 'medicamentos',
-      label: 'Mi menstruación se detuvo.',
+      label: 'Mi menstruación se detuvo',
       description: 'Estoy tomando otros medicamentos para detener mi menstruación.'
    },
    {
