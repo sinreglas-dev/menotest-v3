@@ -29,7 +29,7 @@ export default function Question({ question, mainOptions, answer, onMainAnswer }
             {question.question}
          </h2>
 
-         <p className="mt-1 text-sm leading-1 text-[#6b7280]">
+         <p className="mt-1 text-sm text-[#6b7280]">
             Selecciona la opción que mejor describa cómo te has sentido últimamente.
          </p>
 

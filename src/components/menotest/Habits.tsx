@@ -31,7 +31,7 @@ export default function Habits({ habit, answer, onAnswer }: Props) {
          </h2>
 
          {/* Descripción */}
-         <p className="mt-1 max-w-2xl text-sm leading-1 text-[#6b7280]">
+         <p className="mt-1 max-w-2xl text-sm  text-[#6b7280]">
             Selecciona la opción que mejor describa tus hábitos habituales.
          </p>
 
