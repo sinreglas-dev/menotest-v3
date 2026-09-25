@@ -240,14 +240,32 @@ export default function Results({
    * Construye el PDF del reporte de usuario (resumen + recomendaciones).
    * Cada sección se pinta en el PDF paginando automáticamente.
    */
+  // const construirReporteUsuarioPdf = async () => {
+  //   if (!resultSummaryRef.current || !resultRecommendationsRef.current) return null;
+
+  //   const pdf = await crearDocumentoPdf();
+  //   await agregarElementoAPdf(pdf, resultSummaryRef.current, { fondoColor: '#fafafa' });
+  //   await agregarElementoAPdf(pdf, resultRecommendationsRef.current, {
+  //     fondoColor: '#fafafa',
+  //     iniciarEnNuevaPagina: true,
+  //   });
+
+  //   return pdf;
+  // };
   const construirReporteUsuarioPdf = async () => {
     if (!resultSummaryRef.current || !resultRecommendationsRef.current) return null;
 
     const pdf = await crearDocumentoPdf();
-    await agregarElementoAPdf(pdf, resultSummaryRef.current, { fondoColor: '#fafafa' });
+
+    await agregarElementoAPdf(pdf, resultSummaryRef.current, {
+      fondoColor: '#fafafa',
+      anchoCaptura: 1152
+    });
+
     await agregarElementoAPdf(pdf, resultRecommendationsRef.current, {
       fondoColor: '#fafafa',
       iniciarEnNuevaPagina: true,
+      anchoCaptura: 1152
     });
 
     return pdf;
