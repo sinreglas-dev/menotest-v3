@@ -274,26 +274,88 @@ export default function Results({
   /**
    * Descarga el PDF del reporte de usuario al disco.
    */
+  // const downloadPdf = async () => {
+  //   if (isGeneratingPdf) return;
+
+  //   try {
+  //     setIsGeneratingPdf(true);
+
+  //     const pdf = await construirReporteUsuarioPdf();
+  //     if (!pdf) return;
+
+  //     const patientFileName = nombreArchivoSeguro(
+  //       `${patient.name} ${patient.paternalLastName}`
+  //     );
+
+  //     pdf.save(
+  //       patientFileName
+  //         ? `reporte-menotest-${patientFileName}.pdf`
+  //         : 'reporte-menotest.pdf'
+  //     );
+
+  //   } catch (error) {
+  //     console.error('[MenoTest] Error generando el reporte:', error);
+  //   } finally {
+  //     setIsGeneratingPdf(false);
+  //   }
+  // };
+
+
   const downloadPdf = async () => {
     if (isGeneratingPdf) return;
+
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const pdfWindow = isIOS ? window.open('', '_blank') : null;
+
+    if (pdfWindow) {
+      pdfWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>Generando reporte...</title>
+        </head>
+        <body style="margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#fafafa;font-family:Arial,sans-serif;color:#6e0b6c;">
+          <div style="text-align:center;padding:24px;">
+            <p style="margin:0;font-size:16px;font-weight:600;">Generando tu reporte...</p>
+            <p style="margin:8px 0 0;font-size:13px;color:#6b7280;">Espera un momento.</p>
+          </div>
+        </body>
+      </html>
+    `);
+      pdfWindow.document.close();
+    }
 
     try {
       setIsGeneratingPdf(true);
 
       const pdf = await construirReporteUsuarioPdf();
-      if (!pdf) return;
 
-      const patientFileName = nombreArchivoSeguro(
-        `${patient.name} ${patient.paternalLastName}`
-      );
+      if (!pdf) {
+        pdfWindow?.close();
+        return;
+      }
 
-      pdf.save(
-        patientFileName
-          ? `reporte-menotest-${patientFileName}.pdf`
-          : 'reporte-menotest.pdf'
-      );
+      const patientFileName = nombreArchivoSeguro(`${patient.name} ${patient.paternalLastName}`);
+      const fileName = patientFileName ? `reporte-menotest-${patientFileName}.pdf` : 'reporte-menotest.pdf';
 
+      if (isIOS && pdfWindow) {
+        const pdfBlob = pdf.output('blob') as Blob;
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+
+        pdfWindow.location.replace(pdfUrl);
+
+        window.setTimeout(() => {
+          URL.revokeObjectURL(pdfUrl);
+        }, 120000);
+
+        return;
+      }
+
+      pdf.save(fileName);
     } catch (error) {
+      pdfWindow?.close();
       console.error('[MenoTest] Error generando el reporte:', error);
     } finally {
       setIsGeneratingPdf(false);

@@ -1,4 +1,4 @@
-// Genera PDFs manteniendo un layout de escritorio independientemente del dispositivo.
+// Genera PDFs con layout de escritorio y elimina espacio vacío antes de paginar.
 export async function crearDocumentoPdf() {
   const jsPDFModule = await import('jspdf');
   const jsPDF = jsPDFModule.jsPDF;
@@ -30,7 +30,7 @@ export async function agregarElementoAPdf(pdf: any, elemento: HTMLElement, opcio
   const printableWidth = pageWidth - margin * 2;
   const printableHeight = pageHeight - margin * 2;
 
-  // Contenedor temporal fuera de pantalla
+  // Contenedor temporal
   const contenedor = document.createElement('div');
   contenedor.style.position = 'fixed';
   contenedor.style.left = `-${anchoCaptura + 200}px`;
@@ -57,12 +57,14 @@ export async function agregarElementoAPdf(pdf: any, elemento: HTMLElement, opcio
   try {
     // Esperar layout, fuentes e imágenes
     if (document.fonts?.ready) await document.fonts.ready;
+
     await esperarImagenes(clon);
     await esperarRender();
 
-    const alturaCaptura = clon.scrollHeight;
+    const alturaCaptura = Math.ceil(clon.getBoundingClientRect().height);
 
-    const canvas = await html2canvas(clon, {
+    // Captura
+    const canvasOriginal = await html2canvas(clon, {
       scale: 2,
       useCORS: true,
       allowTaint: false,
@@ -71,10 +73,15 @@ export async function agregarElementoAPdf(pdf: any, elemento: HTMLElement, opcio
       width: anchoCaptura,
       height: alturaCaptura,
       windowWidth: anchoCaptura,
-      windowHeight: alturaCaptura,
+      windowHeight: Math.max(alturaCaptura, 800),
       scrollX: 0,
       scrollY: 0
     });
+
+    // Eliminar espacio vacío inferior
+    const canvas = recortarEspacioInferior(canvasOriginal, fondoColor);
+
+    if (canvas.height <= 0 || canvas.width <= 0) return;
 
     const pxPerMm = canvas.width / printableWidth;
     const pageHeightPx = Math.floor(printableHeight * pxPerMm);
@@ -84,16 +91,25 @@ export async function agregarElementoAPdf(pdf: any, elemento: HTMLElement, opcio
     let agregarPaginaAntes = opciones.iniciarEnNuevaPagina ?? false;
 
     while (renderedHeight < canvas.height) {
+      const remainingHeight = canvas.height - renderedHeight;
+
+      // Evita generar una página por un sobrante insignificante
+      if (remainingHeight <= 4) break;
+
       if (localPageIndex > 0 || agregarPaginaAntes) pdf.addPage();
+
       agregarPaginaAntes = false;
 
-      const currentPageHeight = Math.min(pageHeightPx, canvas.height - renderedHeight);
+      const currentPageHeight = Math.min(pageHeightPx, remainingHeight);
+
+      if (currentPageHeight <= 4) break;
 
       const pageCanvas = document.createElement('canvas');
       pageCanvas.width = canvas.width;
       pageCanvas.height = currentPageHeight;
 
       const context = pageCanvas.getContext('2d');
+
       if (!context) break;
 
       context.fillStyle = fondoColor;
@@ -114,7 +130,14 @@ export async function agregarElementoAPdf(pdf: any, elemento: HTMLElement, opcio
       const imageData = pageCanvas.toDataURL('image/jpeg', 0.96);
       const imageHeightMm = currentPageHeight / pxPerMm;
 
-      pdf.addImage(imageData, 'JPEG', margin, margin, printableWidth, imageHeightMm);
+      pdf.addImage(
+        imageData,
+        'JPEG',
+        margin,
+        margin,
+        printableWidth,
+        imageHeightMm
+      );
 
       renderedHeight += currentPageHeight;
       localPageIndex++;
@@ -124,7 +147,114 @@ export async function agregarElementoAPdf(pdf: any, elemento: HTMLElement, opcio
   }
 }
 
-// Espera a que el navegador termine de calcular el layout
+// Recorta únicamente el espacio vacío al final del canvas
+function recortarEspacioInferior(canvas: HTMLCanvasElement, fondoColor: string): HTMLCanvasElement {
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+
+  if (!context) return canvas;
+
+  const width = canvas.width;
+  const height = canvas.height;
+
+  const background = hexToRgb(fondoColor);
+
+  if (!background) return canvas;
+
+  const imageData = context.getImageData(0, 0, width, height);
+  const data = imageData.data;
+
+  const tolerancia = 8;
+  const pasoX = Math.max(1, Math.floor(width / 300));
+
+  let ultimaFilaConContenido = -1;
+
+  for (let y = height - 1; y >= 0; y--) {
+    let tieneContenido = false;
+
+    for (let x = 0; x < width; x += pasoX) {
+      const index = (y * width + x) * 4;
+
+      const r = data[index];
+      const g = data[index + 1];
+      const b = data[index + 2];
+      const a = data[index + 3];
+
+      if (a === 0) continue;
+
+      const esFondo =
+        Math.abs(r - background.r) <= tolerancia &&
+        Math.abs(g - background.g) <= tolerancia &&
+        Math.abs(b - background.b) <= tolerancia;
+
+      if (!esFondo) {
+        tieneContenido = true;
+        break;
+      }
+    }
+
+    if (tieneContenido) {
+      ultimaFilaConContenido = y;
+      break;
+    }
+  }
+
+  if (ultimaFilaConContenido < 0) return canvas;
+
+  // Pequeño margen inferior visual
+  const paddingInferior = 40;
+  const nuevaAltura = Math.min(height, ultimaFilaConContenido + paddingInferior);
+
+  // No hacer trabajo si prácticamente no hay nada que recortar
+  if (nuevaAltura >= height - 4) return canvas;
+
+  const recortado = document.createElement('canvas');
+  recortado.width = width;
+  recortado.height = nuevaAltura;
+
+  const recortadoContext = recortado.getContext('2d');
+
+  if (!recortadoContext) return canvas;
+
+  recortadoContext.fillStyle = fondoColor;
+  recortadoContext.fillRect(0, 0, width, nuevaAltura);
+
+  recortadoContext.drawImage(
+    canvas,
+    0,
+    0,
+    width,
+    nuevaAltura,
+    0,
+    0,
+    width,
+    nuevaAltura
+  );
+
+  return recortado;
+}
+
+// Convierte HEX a RGB
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const normalized = hex.replace('#', '').trim();
+
+  if (normalized.length === 3) {
+    return {
+      r: parseInt(normalized[0] + normalized[0], 16),
+      g: parseInt(normalized[1] + normalized[1], 16),
+      b: parseInt(normalized[2] + normalized[2], 16)
+    };
+  }
+
+  if (normalized.length !== 6) return null;
+
+  return {
+    r: parseInt(normalized.substring(0, 2), 16),
+    g: parseInt(normalized.substring(2, 4), 16),
+    b: parseInt(normalized.substring(4, 6), 16)
+  };
+}
+
+// Espera layout
 function esperarRender(): Promise<void> {
   return new Promise(resolve => {
     requestAnimationFrame(() => {
@@ -133,7 +263,7 @@ function esperarRender(): Promise<void> {
   });
 }
 
-// Espera imágenes antes de capturar
+// Espera imágenes
 async function esperarImagenes(elemento: HTMLElement): Promise<void> {
   const imagenes = Array.from(elemento.querySelectorAll('img'));
 
