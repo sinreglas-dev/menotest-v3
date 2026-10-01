@@ -24,7 +24,8 @@ export default function DashboardSidebar({ open, onClose }: Props) {
    const isActive = (href: string) => href === '/dashboard' ? pathname === href : pathname.startsWith(href);
 
    // Logout temporal
-   const handleLogout = () => {
+   const handleLogout = async () => {
+      await fetch('/api/admin/logout', { method: 'POST' });
       router.push('/login');
    };
 

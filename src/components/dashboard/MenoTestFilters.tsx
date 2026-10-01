@@ -4,19 +4,17 @@ import { Search, SlidersHorizontal, X } from 'lucide-react';
 
 interface Props {
    search: string;
-   status: string;
    program: string;
    stage: string;
    onSearchChange: (value: string) => void;
-   onStatusChange: (value: string) => void;
    onProgramChange: (value: string) => void;
    onStageChange: (value: string) => void;
    onClear: () => void;
 }
 
-export default function MenoTestFilters({ search, status, program, stage, onSearchChange, onStatusChange, onProgramChange, onStageChange, onClear }: Props) {
+export default function MenoTestFilters({ search, program, stage, onSearchChange, onProgramChange, onStageChange, onClear }: Props) {
 
-   const hasFilters = search || status || program || stage;
+   const hasFilters = search || program || stage;
 
    return (
       <section className="rounded-2xl border border-[#eee7ee] bg-white p-4 shadow-sm sm:p-5">
@@ -30,18 +28,12 @@ export default function MenoTestFilters({ search, status, program, stage, onSear
             </div>
 
             {/* Filtros */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:flex xl:shrink-0">
-
-               <select value={status} onChange={event => onStatusChange(event.target.value)} className="h-11 min-w-[145px] rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#6b7280] outline-none transition focus:border-[#6e0b6c]">
-                  <option value="">Todos los estados</option>
-                  <option value="Completo">Completo</option>
-                  <option value="Incompleto">Incompleto</option>
-               </select>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:flex xl:shrink-0">
 
                <select value={program} onChange={event => onProgramChange(event.target.value)} className="h-11 min-w-[150px] rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#6b7280] outline-none transition focus:border-[#6e0b6c]">
                   <option value="">Todas las campañas</option>
-                  <option value="General">General</option>
-                  <option value="Organon">Organon</option>
+                  <option value="general">Sin Reglas</option>        
+                  <option value="iztapalapa">Organon</option> 
                   <option value="Reina Madre">Reina Madre</option>
                   <option value="FEMSA">FEMSA</option>
                </select>

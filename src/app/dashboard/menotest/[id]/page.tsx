@@ -2,77 +2,50 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import MedicalReportPreview from '@/components/dashboard/MedicalReportPreview';
 import { Activity, ArrowLeft, CalendarDays, CheckCircle2, ClipboardList, Droplets, FileText, HeartPulse, Mail, MapPin, Phone, Ruler, Scale, UserRound } from 'lucide-react';
 
-// Datos fake
-const EVALUATIONS = [
-   {
-      id: 1284,
-      patient: {
-         name: 'María',
-         paternalLastName: 'González',
-         maternalLastName: 'López',
-         email: 'maria.gonzalez@email.com',
-         phone: '5512345678',
-         birthDate: '18 de mayo de 1974',
-         age: 52,
-         country: 'México',
-         height: 164,
-         weight: 66
-      },
-      stage: 'Transición menopáusica',
-      score: 38,
-      imc: '24.5',
-      status: 'Completo',
-      date: '22 Sep 2026',
-      program: 'Organon',
-      menstruation: 'Sí, pero ha cambiado en frecuencia o regularidad.',
-      referrals: {
-         medicine: { active: true, priority: false },
-         gynecology: { active: true, priority: false },
-         psychology: { active: false, priority: false }
-      },
-      symptoms: [
-         { name: 'Palpitaciones', category: 'Cardiovascular', intensity: 'Bastante', value: 2 },
-         { name: 'Tensión o nerviosismo', category: 'Emocional', intensity: 'Poco', value: 1 },
-         { name: 'Dificultades relacionadas con el descanso', category: 'Descanso', intensity: 'Mucho', value: 3 },
-         { name: 'Ansiedad', category: 'Emocional', intensity: 'Poco', value: 1 },
-         { name: 'Dificultad para concentrarse', category: 'Cognitivo', intensity: 'Bastante', value: 2 },
-         { name: 'Falta de energía', category: 'Energía', intensity: 'Bastante', value: 2 },
-         { name: 'Mareo', category: 'Neurológico', intensity: 'Bastante', value: 2 },
-         { name: 'Dolor de cabeza', category: 'Neurológico', intensity: 'Bastante', value: 2 },
-         { name: 'Bochornos', category: 'Vasomotor', intensity: 'Mucho', value: 3 },
-         { name: 'Sudoración', category: 'Vasomotor', intensity: 'Bastante', value: 2 },
-         { name: 'Resequedad', category: 'Genitourinario', intensity: 'Bastante', value: 2 },
-         { name: 'Niebla mental', category: 'Cognitivo', intensity: 'Bastante', value: 2 }
-      ],
-      habits: [
-         { name: 'Consumo de cafeína', answer: 'Moderado', level: 'medium' },
-         { name: 'Consumo de alcohol', answer: 'Ocasional', level: 'low' },
-         { name: 'Calidad del descanso', answer: 'Menos de 7 horas', level: 'high' },
-         { name: 'Nivel de estrés', answer: 'Frecuente', level: 'high' },
-         { name: 'Actividad física', answer: '3 veces por semana', level: 'low' },
-         { name: 'Hidratación', answer: 'Adecuada', level: 'low' }
-      ],
-      recommendations: [
-         { specialist: 'Medicina general', text: 'Dar seguimiento a los síntomas físicos reportados y valorar su evolución.' },
-         { specialist: 'Ginecología', text: 'Considerar valoración ginecológica de acuerdo con los síntomas vasomotores y genitourinarios reportados.' },
-         { specialist: 'Bienestar', text: 'Mantener hábitos de descanso, hidratación y actividad física de forma regular.' }
-      ]
-   }
-];
-
 export default function MenoTestDetailPage() {
-
    const params = useParams();
-   const [reportOpen, setReportOpen] = useState(false);
    const id = Number(params.id);
 
-   // Evaluación
-   const evaluation = EVALUATIONS.find(item => item.id === id) || EVALUATIONS[0];
-   const fullName = `${evaluation.patient.name} ${evaluation.patient.paternalLastName} ${evaluation.patient.maternalLastName}`;
+   const [evaluation, setEvaluation] = useState<any>(null);
+   const [cargando, setCargando] = useState(true);
+   const [reportOpen, setReportOpen] = useState(false);
+
+   useEffect(() => {
+      const cargar = async () => {
+         try {
+            const res = await fetch(`/api/admin/evaluaciones/${id}`);
+            if (!res.ok) throw new Error('No encontrado');
+            const data = await res.json();
+            setEvaluation(data);
+         } catch (error) {
+            console.error('Error cargando detalle:', error);
+         } finally {
+            setCargando(false);
+         }
+      };
+      cargar();
+   }, [id]);
+
+   if (cargando) {
+      return <div className="py-16 text-center text-sm text-[#9ca3af]">Cargando evaluación...</div>;
+   }
+
+   if (!evaluation) {
+      return (
+         <div className="py-16 text-center">
+            <p className="text-sm font-semibold text-[#171717]">No encontramos esta evaluación</p>
+            <Link href="/dashboard/menotest" className="mt-2 inline-block text-sm text-[#6e0b6c] hover:underline">
+               Volver a MenoTest
+            </Link>
+         </div>
+      );
+   }
+
+   const fullName = `${evaluation.patient.name} ${evaluation.patient.paternalLastName} ${evaluation.patient.maternalLastName}`.trim();
 
    return (
       <div className="space-y-6">
@@ -193,7 +166,7 @@ export default function MenoTestDetailPage() {
 
             <div className="p-5 sm:p-6">
                <SectionTitle icon={Activity} title="Síntomas reportados" />
-               <p className="mt-2 text-xs text-[#9ca3af]">Síntomas con una intensidad mayor a “Nada”.</p>
+               <p className="mt-2 text-xs text-[#9ca3af]">Síntomas con una intensidad mayor a "Nada".</p>
             </div>
 
             <div className="overflow-x-auto">
@@ -209,7 +182,15 @@ export default function MenoTestDetailPage() {
                   </thead>
 
                   <tbody>
-                     {evaluation.symptoms.map((symptom, index) => (
+                     {evaluation.symptoms.length === 0 && (
+                        <tr>
+                           <td colSpan={4} className="px-6 py-10 text-center text-sm text-[#9ca3af]">
+                              No se reportaron síntomas con intensidad mayor a cero.
+                           </td>
+                        </tr>
+                     )}
+
+                     {evaluation.symptoms.map((symptom: any, index: number) => (
                         <tr key={`${symptom.name}-${index}`} className="border-b border-[#f4f1f4] last:border-0">
                            <td className="px-6 py-4 text-sm font-semibold text-[#374151]">{symptom.name}</td>
                            <td className="px-4 py-4 text-sm text-[#6b7280]">{symptom.category}</td>
@@ -230,7 +211,11 @@ export default function MenoTestDetailPage() {
             <SectionTitle icon={CheckCircle2} title="Hábitos" />
 
             <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-               {evaluation.habits.map((habit, index) => (
+               {evaluation.habits.length === 0 && (
+                  <p className="col-span-full text-sm text-[#9ca3af]">No se registraron hábitos.</p>
+               )}
+
+               {evaluation.habits.map((habit: any, index: number) => (
                   <div key={`${habit.name}-${index}`} className="flex items-center justify-between gap-4 rounded-xl border border-[#f0eaf0] p-4">
                      <div>
                         <p className="text-xs font-medium text-[#9ca3af]">{habit.name}</p>
@@ -250,7 +235,11 @@ export default function MenoTestDetailPage() {
             <SectionTitle icon={FileText} title="Recomendaciones" />
 
             <div className="mt-5 space-y-3">
-               {evaluation.recommendations.map((recommendation, index) => (
+               {evaluation.recommendations.length === 0 && (
+                  <p className="text-sm text-[#9ca3af]">No hay recomendaciones para esta evaluación.</p>
+               )}
+
+               {evaluation.recommendations.map((recommendation: any, index: number) => (
                   <div key={`${recommendation.specialist}-${index}`} className="rounded-xl border border-[#f0eaf0] p-4 sm:p-5">
                      <div className="flex gap-4">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f5eaf5] text-xs font-bold text-[#6e0b6c]">{index + 1}</div>
@@ -265,13 +254,14 @@ export default function MenoTestDetailPage() {
             </div>
 
          </section>
+
          <MedicalReportPreview open={reportOpen} evaluation={evaluation} onClose={() => setReportOpen(false)} />
-         {/* <MedicalReportPreview open={true} evaluation={evaluation} onClose={() => setReportOpen(false)} /> */}
       </div>
    );
 }
 
-// Título
+// ==================== HELPERS ====================
+
 function SectionTitle({ icon: Icon, title }: { icon: typeof UserRound; title: string }) {
    return (
       <div className="flex items-center gap-3">
@@ -283,7 +273,6 @@ function SectionTitle({ icon: Icon, title }: { icon: typeof UserRound; title: st
    );
 }
 
-// Dato paciente
 function PatientData({ icon: Icon, label, value }: { icon: typeof UserRound; label: string; value: string }) {
    return (
       <div className="flex items-start gap-3">
@@ -296,7 +285,6 @@ function PatientData({ icon: Icon, label, value }: { icon: typeof UserRound; lab
    );
 }
 
-// Resumen
 function SummaryItem({ label, value }: { label: string; value: string }) {
    return (
       <div className="p-4 sm:p-5">
@@ -306,7 +294,6 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
    );
 }
 
-// Intensidad
 function IntensityBadge({ value, label }: { value: number; label: string }) {
 
    const styles: Record<number, string> = {
@@ -318,7 +305,6 @@ function IntensityBadge({ value, label }: { value: number; label: string }) {
    return <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${styles[value] || styles[1]}`}>{label}</span>;
 }
 
-// Hábitos
 function HabitIndicator({ level }: { level: string }) {
 
    const styles: Record<string, string> = {
@@ -330,7 +316,6 @@ function HabitIndicator({ level }: { level: string }) {
    return <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${styles[level] || styles.low}`} />;
 }
 
-// Canalización
 function ReferralCard({ letter, title, active, priority }: { letter: string; title: string; active: boolean; priority: boolean }) {
    return (
       <div className={`rounded-xl border p-4 ${active ? 'border-[#e1c9e0] bg-[#fcf7fc]' : 'border-[#eeeeee] bg-[#fafafa]'}`}>

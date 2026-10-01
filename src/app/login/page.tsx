@@ -16,12 +16,24 @@ export default function LoginPage() {
    const [error, setError] = useState('');
 
    // Login temporal frontend
-   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       setError('');
 
       if (!email.trim() || !password.trim()) {
          setError('Ingresa tu correo electrónico y contraseña.');
+         return;
+      }
+
+      const res = await fetch('/api/admin/login', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ correo: email, password }),
+      });
+
+      if (!res.ok) {
+         const data = await res.json();
+         setError(data.error || 'Credenciales incorrectas.');
          return;
       }
 

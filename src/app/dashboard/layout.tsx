@@ -1,12 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 
 export default function DashboardLayout({ children }: Readonly<{ children: React.ReactNode }>) {
 
    const [sidebarOpen, setSidebarOpen] = useState(false);
+   const router = useRouter();
+
+   useEffect(() => {
+      fetch('/api/admin/kpis').then((res) => {
+         if (res.status === 401) router.push('/login');
+      });
+   }, [router]);
 
    return (
       <div className="min-h-screen bg-[#fafafa]">
