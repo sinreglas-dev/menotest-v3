@@ -40,13 +40,22 @@ export async function POST(peticion: NextRequest) {
       femsa: 'FEMSA',
     };
 
-    registrarContactoMenotest({
-      correo: paciente.email,
-      nombre: paciente.name,
-      apellidoPaterno: paciente.paternalLastName,
-      telefono: paciente.phone,
-      etiqueta: `Menotest - ${NOMBRES_PROGRAMA[programa] ?? programa}`,
-    }).catch((error) => console.error('[evaluacion] Error en Mailchimp:', error));
+    // registrarContactoMenotest({
+    //   correo: paciente.email,
+    //   nombre: paciente.name,
+    //   apellidoPaterno: paciente.paternalLastName,
+    //   telefono: paciente.phone,
+    //   etiqueta: `Menotest - ${NOMBRES_PROGRAMA[programa] ?? programa}`,
+    // }).catch((error) => console.error('[evaluacion] Error en Mailchimp:', error));
+    if (process.env.NODE_ENV === 'production') {
+      registrarContactoMenotest({
+        correo: paciente.email,
+        nombre: paciente.name,
+        apellidoPaterno: paciente.paternalLastName,
+        telefono: paciente.phone,
+        etiqueta: `Menotest - ${NOMBRES_PROGRAMA[programa] ?? programa}`,
+      }).catch((error) => console.error('[evaluacion] Error en Mailchimp:', error));
+    }
 
 
     return NextResponse.json({ ok: true, evaluacionId: resultado.evaluacionId });
