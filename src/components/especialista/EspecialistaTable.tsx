@@ -16,6 +16,7 @@ export interface EvaluacionEspecialista {
    imc: number | null;
    creado_en: string;
    programa?: string;
+   historia_completada?: number;
 }
 
 interface Props {

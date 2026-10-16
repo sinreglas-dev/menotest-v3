@@ -3,6 +3,7 @@ import testData from '@/data/menotest.json';
 import type { TestData, Answer, HabitAnswer } from '@/types/menotest';
 import { evaluateClinicalReferral } from '@/shared/data/clinicalReferral';
 import { getRecommendations } from '@/shared/data/recommendations';
+import { obtenerHistoriaPorEvaluacion } from '@/shared/data/repositorioHistoriaClinica';
 
 const menoTestData = testData as TestData;
 
@@ -31,7 +32,11 @@ export interface FilaEvaluacion {
   imc: number;
   imc_clasificacion: string;
   creado_en: string;
+  especialista_id: number | null;
+  especialista_nombre: string | null;
 }
+
+// ==================== LISTAR EVALUACIONES ====================
 
 export async function listarEvaluaciones(filtros: FiltrosReporte) {
   const pool = obtenerPool();
@@ -85,9 +90,12 @@ export async function listarEvaluaciones(filtros: FiltrosReporte) {
       CONVERT(AES_DECRYPT(e.apellido_paterno, ?) USING utf8mb4) AS apellido_paterno,
       CONVERT(AES_DECRYPT(e.apellido_materno, ?) USING utf8mb4) AS apellido_materno,
       CONVERT(AES_DECRYPT(e.correo, ?) USING utf8mb4) AS correo,
-      e.etapa, e.puntaje_total, e.imc, e.imc_clasificacion, e.creado_en
+      e.etapa, e.puntaje_total, e.imc, e.imc_clasificacion, e.creado_en,
+      e.especialista_id,
+      esp.nombre AS especialista_nombre
     FROM evaluaciones e
     INNER JOIN programas p ON p.id = e.programa_id
+    LEFT JOIN especialistas esp ON esp.id = e.especialista_id
     ${whereClause}
     ${clausulaBusqueda}
     ORDER BY e.creado_en DESC
@@ -123,12 +131,14 @@ export async function listarEvaluaciones(filtros: FiltrosReporte) {
   };
 }
 
+// ==================== DETALLE COMPLETO ====================
+
 export async function obtenerDetalleEvaluacionCompleto(id: number) {
   const pool = obtenerPool();
 
   const [filasEvaluacion] = await pool.execute(
     `SELECT
-       e.id, p.clave  AS programa_clave, p.nombre AS programa,
+       e.id, p.clave AS programa_clave, p.nombre AS programa,
        CONVERT(AES_DECRYPT(e.nombre, ?) USING utf8mb4) AS nombre,
        CONVERT(AES_DECRYPT(e.apellido_paterno, ?) USING utf8mb4) AS apellido_paterno,
        CONVERT(AES_DECRYPT(e.apellido_materno, ?) USING utf8mb4) AS apellido_materno,
@@ -137,9 +147,15 @@ export async function obtenerDetalleEvaluacionCompleto(id: number) {
        CONVERT(AES_DECRYPT(e.fecha_nacimiento, ?) USING utf8mb4) AS fecha_nacimiento,
        e.estatura_cm, e.peso_kg, e.pais,
        e.valor_menstruacion, e.puntaje_total, e.etapa, e.imc, e.imc_clasificacion,
-       e.creado_en, e.completado_en
+       e.creado_en, e.completado_en,
+       e.especialista_id,
+       esp.nombre       AS especialista_nombre,
+       esp.especialidad AS especialista_especialidad,
+       esp.correo       AS especialista_correo,
+       esp.telefono     AS especialista_telefono
      FROM evaluaciones e
      INNER JOIN programas p ON p.id = e.programa_id
+     LEFT JOIN especialistas esp ON esp.id = e.especialista_id
      WHERE e.id = ?
      LIMIT 1`,
     [AES_KEY, AES_KEY, AES_KEY, AES_KEY, AES_KEY, AES_KEY, id]
@@ -164,9 +180,6 @@ export async function obtenerDetalleEvaluacionCompleto(id: number) {
     [id]
   );
 
-  // Reconstruir Answer[] y HabitAnswer[] tal como los produce el quiz,
-  // para poder reutilizar exactamente las mismas funciones de cálculo
-  // (evaluateClinicalReferral, getRecommendations) que usa el frontend.
   const respuestasDb = filasRespuestas as Array<{ pregunta_id: number; categoria: string; opcion_id: string; valor: number }>;
   const habitosDb = filasHabitos as Array<{ habito_id: string; categoria: string; opcion_id: string; valor: number }>;
 
@@ -188,7 +201,6 @@ export async function obtenerDetalleEvaluacionCompleto(id: number) {
     value: h.valor,
   }));
 
-  // Síntomas reportados — solo los que tuvieron intensidad mayor a "Nada"
   const symptoms = respuestasDb
     .filter((r) => r.valor > 0)
     .map((r) => {
@@ -202,7 +214,6 @@ export async function obtenerDetalleEvaluacionCompleto(id: number) {
       };
     });
 
-  // Hábitos — todos, con nivel bajo/medio/alto según el valor
   const habits = habitosDb.map((h) => {
     const preguntaHabito = menoTestData.habits.find((hb) => hb.id === h.habito_id);
     const opcion = preguntaHabito?.options.find((o) => o.id === h.opcion_id);
@@ -213,18 +224,19 @@ export async function obtenerDetalleEvaluacionCompleto(id: number) {
     };
   });
 
-  // Canalización clínica — solo aplica a Organon
   const isOrganon = evaluacion.programa === 'Organon';
   const clinicalReferral = isOrganon
     ? evaluateClinicalReferral(answers, Number(evaluacion.puntaje_total))
     : null;
 
-  // Recomendaciones por especialista
   const recommendationsRaw = getRecommendations(answers, habitAnswers);
   const recommendations = recommendationsRaw.map((rec) => ({
     specialist: rec.specialty,
     text: rec.text,
   }));
+
+  // Historia clínica
+  const historiaRow = await obtenerHistoriaPorEvaluacion(id);
 
   return {
     id: evaluacion.id,
@@ -266,7 +278,47 @@ export async function obtenerDetalleEvaluacionCompleto(id: number) {
     symptoms,
     habits,
     recommendations,
+
+    // Especialista asignada
+    especialista_id: evaluacion.especialista_id ?? null,
+    especialista_nombre: evaluacion.especialista_nombre ?? null,
+    especialista: evaluacion.especialista_id
+      ? {
+          id: evaluacion.especialista_id,
+          nombre: evaluacion.especialista_nombre,
+          especialidad: evaluacion.especialista_especialidad,
+          correo: evaluacion.especialista_correo,
+          telefono: evaluacion.especialista_telefono,
+        }
+      : null,
+
+    // Historia clínica
+    historia_clinica: historiaRow
+      ? {
+          completada: Boolean(historiaRow.completada),
+          enfermedades: parseJSON(historiaRow.enfermedades) ?? [],
+          otrasEnfermedades: historiaRow.otras_enfermedades,
+          medicamentos: historiaRow.medicamentos,
+          alergias: historiaRow.alergias,
+          cirugias: historiaRow.cirugias,
+          antecedentesFamiliares: historiaRow.antecedentes_familiares,
+          observaciones: historiaRow.observaciones,
+        }
+      : null,
   };
+}
+
+// ==================== HELPERS ====================
+
+function parseJSON(valor: any): string[] | null {
+  if (!valor) return null;
+  if (Array.isArray(valor)) return valor;
+  try {
+    const parsed = JSON.parse(valor);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
 }
 
 function calcularEdad(fechaNacimiento: string): number {
@@ -277,6 +329,8 @@ function calcularEdad(fechaNacimiento: string): number {
   if (m < 0 || (m === 0 && hoy.getDate() < nacimiento.getDate())) edad--;
   return edad;
 }
+
+// ==================== ESTADÍSTICAS ====================
 
 export async function obtenerEstadisticas(programa?: string) {
   const pool = obtenerPool();
@@ -317,25 +371,28 @@ export async function obtenerEstadisticas(programa?: string) {
     porEtapa,
     porPrograma,
     resumen: resumenData
-        ? {
-            total_evaluaciones: Number(resumenData.total_evaluaciones ?? 0),
-            promedio_puntaje: resumenData.promedio_puntaje != null
-                ? Number(Number(resumenData.promedio_puntaje).toFixed(1))
-                : 0,
-            promedio_imc: resumenData.promedio_imc != null
-                ? Number(Number(resumenData.promedio_imc).toFixed(1))
-                : 0,
-          }
-        : null,
+      ? {
+          total_evaluaciones: Number(resumenData.total_evaluaciones ?? 0),
+          promedio_puntaje: resumenData.promedio_puntaje != null
+            ? Number(Number(resumenData.promedio_puntaje).toFixed(1))
+            : 0,
+          promedio_imc: resumenData.promedio_imc != null
+            ? Number(Number(resumenData.promedio_imc).toFixed(1))
+            : 0,
+        }
+      : null,
   };
 }
+
+// ==================== KPIs ====================
 
 export async function obtenerKpis(programa?: string) {
   const pool = obtenerPool();
   const condicion = programa ? 'AND p.clave = ?' : '';
   const parametros = programa ? [programa] : [];
 
-  const [fila] = await pool.execute(
+  // KPIs base: total + promedio
+  const [filaBase] = await pool.execute(
     `SELECT
        COUNT(*) AS total,
        AVG(e.puntaje_total) AS promedio_puntaje
@@ -344,13 +401,41 @@ export async function obtenerKpis(programa?: string) {
      WHERE e.estado = 'completado' ${condicion}`,
     parametros
   );
+  const base = (filaBase as Array<{ total: number; promedio_puntaje: number | null }>)[0];
 
-  const datos = (fila as Array<{ total: number; promedio_puntaje: number | null }>)[0];
+  // KPIs de especialistas: asignadas / sin asignar
+  const [filaEsp] = await pool.execute(
+    `SELECT
+       SUM(CASE WHEN e.especialista_id IS NOT NULL THEN 1 ELSE 0 END) AS asignadas,
+       SUM(CASE WHEN e.especialista_id IS NULL     THEN 1 ELSE 0 END) AS sinAsignar
+     FROM evaluaciones e
+     INNER JOIN programas p ON p.id = e.programa_id
+     WHERE e.estado = 'completado' ${condicion}`,
+    parametros
+  );
+  const esp = (filaEsp as Array<{ asignadas: number; sinAsignar: number }>)[0];
+
+  // Etapa con mayor incidencia
+  const [filaEtapa] = await pool.execute(
+    `SELECT e.etapa, COUNT(*) AS total
+     FROM evaluaciones e
+     INNER JOIN programas p ON p.id = e.programa_id
+     WHERE e.estado = 'completado' ${condicion}
+     GROUP BY e.etapa
+     ORDER BY total DESC
+     LIMIT 1`,
+    parametros
+  );
+  const etapa = (filaEtapa as Array<{ etapa: string; total: number }>)[0];
 
   return {
-    total: datos?.total ?? 0,
-    promedioPuntaje: datos?.promedio_puntaje != null
-   ? Number(Number(datos.promedio_puntaje).toFixed(1))
-   : 0,
+    total: Number(base?.total ?? 0),
+    promedioPuntaje: base?.promedio_puntaje != null
+      ? Number(Number(base.promedio_puntaje).toFixed(1))
+      : 0,
+    pacientesAsignadas: Number(esp?.asignadas ?? 0),
+    pacientesSinAsignar: Number(esp?.sinAsignar ?? 0),
+    etapaMayorIncidencia: etapa?.etapa ?? null,
+    totalEtapaMayorIncidencia: Number(etapa?.total ?? 0),
   };
 }

@@ -12,7 +12,7 @@ interface Especialista {
    nombre: string;
    especialidad: string;
    correo: string;
-   telefono: string;
+   telefono: string | null;
 }
 
 interface Evaluacion {
@@ -33,43 +33,37 @@ interface Evaluacion {
 
 const ITEMS_PER_PAGE = 8;
 
-// Especialistas de ejemplo
-const ESPECIALISTAS: Especialista[] = [
-   { id: 1, nombre: 'Dra. Ana Martínez', especialidad: 'Ginecología', correo: 'ana@example.com', telefono: '5512345678' },
-   { id: 2, nombre: 'Dra. Laura Hernández', especialidad: 'Psicología', correo: 'laura@example.com', telefono: '5512345679' },
-   { id: 3, nombre: 'Dra. Sofía Ramírez', especialidad: 'Medicina General', correo: 'sofia@example.com', telefono: '5512345680' }
-];
-
 export default function MenoTestPage() {
-   // Datos
    const [datos, setDatos] = useState<Evaluacion[]>([]);
    const [total, setTotal] = useState(0);
    const [cargando, setCargando] = useState(true);
+   const [especialistas, setEspecialistas] = useState<Especialista[]>([]);
 
-   // Filtros
    const [search, setSearch] = useState('');
    const [program, setProgram] = useState('');
    const [stage, setStage] = useState('');
    const [page, setPage] = useState(1);
 
-   // Modal especialista
    const [modalOpen, setModalOpen] = useState(false);
    const [evaluacionSeleccionada, setEvaluacionSeleccionada] = useState<Evaluacion | null>(null);
    const [especialistaId, setEspecialistaId] = useState<number | null>(null);
+   const [guardando, setGuardando] = useState(false);
+   const [feedback, setFeedback] = useState<string | null>(null);
+   const [mounted, setMounted] = useState(false);
+
+   
+   useEffect(() => setMounted(true), []); 
 
    // Cargar evaluaciones
    useEffect(() => {
       const cargar = async () => {
          setCargando(true);
-
          try {
             const params = new URLSearchParams();
             params.set('pagina', '1');
             params.set('porPagina', '200');
-
             const res = await fetch(`/api/admin/evaluaciones?${params.toString()}`);
             if (!res.ok) throw new Error('No se pudieron cargar las evaluaciones');
-
             const data = await res.json();
             setDatos(data.datos ?? []);
             setTotal(data.total ?? 0);
@@ -79,55 +73,90 @@ export default function MenoTestPage() {
             setCargando(false);
          }
       };
-
       cargar();
    }, []);
 
-   // Especialista seleccionado
-   const especialistaSeleccionada = ESPECIALISTAS.find(item => item.id === especialistaId) ?? null;
+   // Cargar especialistas
+   useEffect(() => {
+      const cargar = async () => {
+         try {
+            const res = await fetch('/api/admin/especialistas', { cache: 'no-store' });
+            if (!res.ok) return;
+            const data = await res.json();
+            setEspecialistas(data.datos ?? []);
+         } catch (error) {
+            console.error('Error cargando especialistas:', error);
+         }
+      };
+      cargar();
+   }, []);
 
-   // Abrir modal
+   const especialistaSeleccionada = especialistas.find(item => item.id === especialistaId) ?? null;
+
    const abrirModal = (evaluacion: Evaluacion) => {
       setEvaluacionSeleccionada(evaluacion);
       setEspecialistaId(evaluacion.especialista_id ?? null);
+      setFeedback(null);
       setModalOpen(true);
    };
 
-   // Cerrar modal
    const cerrarModal = () => {
+      if (guardando) return;
       setModalOpen(false);
       setEvaluacionSeleccionada(null);
       setEspecialistaId(null);
+      setFeedback(null);
    };
 
-   // Asignar especialista
-   const asignarEspecialista = () => {
-      if (!evaluacionSeleccionada || !especialistaSeleccionada) return;
+   const asignarEspecialista = async () => {
+      if (!evaluacionSeleccionada || !especialistaId) return;
 
-      setDatos(prev => prev.map(item =>
-         item.id === evaluacionSeleccionada.id
-            ? { ...item, especialista_id: especialistaSeleccionada.id, especialista_nombre: especialistaSeleccionada.nombre }
-            : item
-      ));
+      setGuardando(true);
+      setFeedback(null);
 
-      cerrarModal();
+      try {
+         const res = await fetch(`/api/admin/evaluaciones/${evaluacionSeleccionada.id}/especialista`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ especialistaId }),
+         });
+
+         const data = await res.json();
+         if (!res.ok) throw new Error(data.error || 'No se pudo asignar');
+
+         const esp = especialistas.find(e => e.id === especialistaId);
+         setDatos(prev => prev.map(item =>
+            item.id === evaluacionSeleccionada.id
+               ? { ...item, especialista_id: especialistaId, especialista_nombre: esp?.nombre ?? null }
+               : item
+         ));
+
+         if (data.correoEnviado) {
+            setFeedback('Especialista asignada y correo enviado.');
+            setTimeout(() => cerrarModal(), 1500);
+         } else if (data.correoError) {
+            setFeedback(`Asignada, pero el correo falló: ${data.correoError}`);
+         } else {
+            setFeedback('Especialista asignada correctamente.');
+         }
+      } catch (error: any) {
+         setFeedback(error.message || 'Error al asignar');
+      } finally {
+         setGuardando(false);
+      }
    };
 
-   // Filtrar evaluaciones
    const filteredData = useMemo(() => {
       const term = search.toLowerCase().trim();
-
       return datos.filter(item => {
          const nombreCompleto = `${item.nombre} ${item.apellido_paterno} ${item.apellido_materno ?? ''}`.toLowerCase();
          const matchesSearch = !term || nombreCompleto.includes(term) || item.correo.toLowerCase().includes(term);
          const matchesProgram = !program || item.programa_clave === program;
          const matchesStage = !stage || item.etapa === stage;
-
          return matchesSearch && matchesProgram && matchesStage;
       });
    }, [datos, search, program, stage]);
 
-   // Paginación
    const totalPages = Math.max(1, Math.ceil(filteredData.length / ITEMS_PER_PAGE));
    const currentPage = Math.min(page, totalPages);
    const start = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -136,7 +165,6 @@ export default function MenoTestPage() {
    return (
       <div className="space-y-6">
 
-         {/* Encabezado */}
          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
                <div className="mb-2 flex items-center gap-2 text-[#6e0b6c]">
@@ -146,14 +174,12 @@ export default function MenoTestPage() {
                <h1 className="text-2xl font-bold tracking-tight text-[#171717] sm:text-3xl">MenoTest</h1>
                <p className="mt-2 text-sm text-[#6b7280]">Consulta y administra las evaluaciones realizadas.</p>
             </div>
-
             <div className="rounded-xl border border-[#eee7ee] bg-white px-4 py-3 shadow-sm">
                <p className="text-xs text-[#9ca3af]">Total de registros</p>
                <p className="mt-1 text-xl font-bold text-[#171717]">{cargando ? '—' : total}</p>
             </div>
          </div>
 
-         {/* Filtros */}
          <MenoTestFilters
             search={search}
             program={program}
@@ -164,7 +190,6 @@ export default function MenoTestPage() {
             onClear={() => { setSearch(''); setProgram(''); setStage(''); setPage(1); }}
          />
 
-         {/* Tabla */}
          <section className="overflow-hidden rounded-2xl border border-[#eee7ee] bg-white shadow-sm">
 
             <div className="flex flex-col gap-4 border-b border-[#f0eaf0] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
@@ -173,7 +198,7 @@ export default function MenoTestPage() {
                   <p className="mt-1 text-xs text-[#9ca3af]">{cargando ? 'Cargando...' : `${filteredData.length} ${filteredData.length === 1 ? 'resultado' : 'resultados'}`}</p>
                </div>
 
-               <button type="button" onClick={() => exportarEvaluacionesExcel(filteredData)} disabled={cargando || filteredData.length === 0} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#6e0b6c] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#570956] disabled:cursor-not-allowed disabled:opacity-50">
+               <button type="button" onClick={() => exportarEvaluacionesExcel(filteredData)} disabled={!mounted || cargando || filteredData.length === 0} suppressHydrationWarning className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#6e0b6c] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#570956] disabled:cursor-not-allowed disabled:opacity-50">
                   <Download size={16} />
                   Exportar a Excel
                </button>
@@ -193,12 +218,9 @@ export default function MenoTestPage() {
                         <th className="px-6 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-[#9ca3af]">Acciones</th>
                      </tr>
                   </thead>
-
                   <tbody>
                      {cargando && (
-                        <tr>
-                           <td colSpan={8} className="px-6 py-16 text-center text-sm text-[#9ca3af]">Cargando evaluaciones...</td>
-                        </tr>
+                        <tr><td colSpan={8} className="px-6 py-16 text-center text-sm text-[#9ca3af]">Cargando evaluaciones...</td></tr>
                      )}
 
                      {!cargando && paginatedData.map(item => {
@@ -211,17 +233,13 @@ export default function MenoTestPage() {
                                  <p className="whitespace-nowrap text-sm font-semibold text-[#171717]">{nombreCompleto}</p>
                                  <p className="mt-1 text-xs text-[#9ca3af]">{item.correo}</p>
                               </td>
-
                               <td className="px-4 py-4 text-sm text-[#6b7280]">{item.etapa ?? 'En evaluación'}</td>
                               <td className="px-4 py-4 text-center text-sm font-semibold text-[#374151]">{item.puntaje_total ?? '—'}</td>
                               <td className="px-4 py-4 text-center text-sm text-[#6b7280]">{item.imc ?? '—'}</td>
                               <td className="whitespace-nowrap px-4 py-4 text-sm text-[#6b7280]">{fecha}</td>
-
                               <td className="px-4 py-4">
                                  <span className="inline-flex whitespace-nowrap rounded-lg bg-[#f5eaf5] px-2.5 py-1 text-[11px] font-semibold text-[#6e0b6c]">{item.programa}</span>
                               </td>
-
-                              {/* Especialista */}
                               <td className="px-4 py-4">
                                  {item.especialista_nombre ? (
                                     <div className="flex flex-col items-start gap-1.5">
@@ -238,7 +256,6 @@ export default function MenoTestPage() {
                                     </button>
                                  )}
                               </td>
-
                               <td className="px-6 py-4 text-right">
                                  <Link href={`/dashboard/menotest/${item.id}`} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#e5e7eb] text-[#6b7280] transition hover:border-[#d7bdd6] hover:bg-[#f5eaf5] hover:text-[#6e0b6c]">
                                     <Eye size={17} />
@@ -263,57 +280,48 @@ export default function MenoTestPage() {
                </table>
             </div>
 
-            {/* Paginación */}
             {!cargando && filteredData.length > 0 && (
                <div className="flex flex-col gap-3 border-t border-[#f0eaf0] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                   <p className="text-xs text-[#9ca3af]">Mostrando {start + 1}–{Math.min(start + ITEMS_PER_PAGE, filteredData.length)} de {filteredData.length}</p>
-
                   <div className="flex items-center gap-2">
                      <button type="button" disabled={currentPage === 1} onClick={() => setPage(c => Math.max(1, c - 1))} className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#e5e7eb] text-[#6b7280] transition hover:bg-[#f5eaf5] hover:text-[#6e0b6c] disabled:cursor-not-allowed disabled:opacity-40"><ChevronLeft size={17} /></button>
-
                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
                         <button key={n} type="button" onClick={() => setPage(n)} className={`flex h-9 min-w-9 items-center justify-center rounded-lg px-2 text-xs font-semibold transition ${currentPage === n ? 'bg-[#6e0b6c] text-white' : 'border border-[#e5e7eb] text-[#6b7280] hover:bg-[#f5eaf5] hover:text-[#6e0b6c]'}`}>{n}</button>
                      ))}
-
                      <button type="button" disabled={currentPage === totalPages} onClick={() => setPage(c => Math.min(totalPages, c + 1))} className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#e5e7eb] text-[#6b7280] transition hover:bg-[#f5eaf5] hover:text-[#6e0b6c] disabled:cursor-not-allowed disabled:opacity-40"><ChevronRight size={17} /></button>
                   </div>
                </div>
             )}
-
          </section>
 
-         {/* Modal especialista */}
+         {/* Modal */}
          {modalOpen && evaluacionSeleccionada && (
             <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 px-4 py-6" onMouseDown={event => { if (event.target === event.currentTarget) cerrarModal(); }}>
-               <div role="dialog" aria-modal="true" aria-labelledby="modal-especialista-title" className="w-full max-w-lg overflow-hidden rounded-[26px] bg-white shadow-2xl">
+               <div role="dialog" aria-modal="true" className="w-full max-w-lg overflow-hidden rounded-[26px] bg-white shadow-2xl">
 
                   <div className="flex items-center justify-between border-b border-[#f0eaf0] px-6 py-5">
                      <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8d2a8a]">MenoTest</p>
-                        <h3 id="modal-especialista-title" className="mt-1 text-lg font-bold text-[#171717]">Asignar especialista</h3>
+                        <h3 className="mt-1 text-lg font-bold text-[#171717]">{evaluacionSeleccionada.especialista_nombre ? 'Cambiar especialista' : 'Asignar especialista'}</h3>
                      </div>
-                     <button type="button" onClick={cerrarModal} aria-label="Cerrar modal" className="flex h-9 w-9 items-center justify-center rounded-xl text-[#6b7280] transition hover:bg-[#f5eaf5] hover:text-[#6e0b6c]"><X size={20} /></button>
+                     <button type="button" onClick={cerrarModal} disabled={guardando} className="flex h-9 w-9 items-center justify-center rounded-xl text-[#6b7280] transition hover:bg-[#f5eaf5] hover:text-[#6e0b6c] disabled:opacity-50"><X size={20} /></button>
                   </div>
 
                   <div className="space-y-5 p-6">
-
-                     {/* Paciente */}
                      <div className="rounded-xl bg-[#faf7fa] p-4">
                         <p className="text-[11px] font-semibold uppercase tracking-wider text-[#8d2a8a]">Paciente</p>
                         <p className="mt-1 text-sm font-bold text-[#171717]">{`${evaluacionSeleccionada.nombre} ${evaluacionSeleccionada.apellido_paterno}`}</p>
                         <p className="mt-1 text-xs text-[#6b7280]">{evaluacionSeleccionada.correo}</p>
                      </div>
 
-                     {/* Selector */}
                      <div>
                         <label htmlFor="especialista-select" className="mb-2 block text-sm font-semibold text-[#171717]">Selecciona una especialista</label>
-                        <select id="especialista-select" value={especialistaId ?? ''} onChange={event => setEspecialistaId(event.target.value ? Number(event.target.value) : null)} className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#374151] outline-none transition focus:border-[#6e0b6c] focus:ring-2 focus:ring-[#f5eaf5]">
+                        <select id="especialista-select" value={especialistaId ?? ''} onChange={event => setEspecialistaId(event.target.value ? Number(event.target.value) : null)} disabled={guardando} className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#374151] outline-none transition focus:border-[#6e0b6c] focus:ring-2 focus:ring-[#f5eaf5] disabled:opacity-50">
                            <option value="">Selecciona una opción</option>
-                           {ESPECIALISTAS.map(especialista => <option key={especialista.id} value={especialista.id}>{especialista.nombre} — {especialista.especialidad}</option>)}
+                           {especialistas.map(especialista => <option key={especialista.id} value={especialista.id}>{especialista.nombre} — {especialista.especialidad}</option>)}
                         </select>
                      </div>
 
-                     {/* Información especialista */}
                      {especialistaSeleccionada && (
                         <div className="rounded-2xl border border-[#eadfea] bg-[#fcf9fc] p-5">
                            <div className="flex items-center gap-3">
@@ -325,18 +333,23 @@ export default function MenoTestPage() {
                            </div>
                            <div className="mt-4 space-y-3 border-t border-[#eadfea] pt-4">
                               <div className="flex items-center gap-2 text-sm text-[#6b7280]"><Mail size={16} className="shrink-0 text-[#6e0b6c]" /><span className="break-all">{especialistaSeleccionada.correo}</span></div>
-                              <div className="flex items-center gap-2 text-sm text-[#6b7280]"><Phone size={16} className="shrink-0 text-[#6e0b6c]" /><span>{especialistaSeleccionada.telefono}</span></div>
+                              {especialistaSeleccionada.telefono && (
+                                 <div className="flex items-center gap-2 text-sm text-[#6b7280]"><Phone size={16} className="shrink-0 text-[#6e0b6c]" /><span>{especialistaSeleccionada.telefono}</span></div>
+                              )}
                            </div>
                         </div>
                      )}
 
+                     {feedback && (
+                        <div className={`rounded-xl border px-4 py-3 text-sm ${feedback.includes('falló') || feedback.includes('Error') ? 'border-amber-100 bg-amber-50 text-amber-700' : 'border-emerald-100 bg-emerald-50 text-emerald-700'}`}>{feedback}</div>
+                     )}
                   </div>
 
                   <div className="flex flex-col-reverse gap-3 border-t border-[#f0eaf0] px-6 py-5 sm:flex-row sm:justify-end">
-                     <button type="button" onClick={cerrarModal} className="rounded-full border border-[#e5e7eb] bg-white px-6 py-2.5 text-sm font-semibold text-[#6b7280] transition hover:bg-[#fafafa]">Cancelar</button>
-                     <button type="button" onClick={asignarEspecialista} disabled={!especialistaSeleccionada} className="inline-flex items-center justify-center gap-2 rounded-full bg-[#6e0b6c] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#570956] disabled:cursor-not-allowed disabled:opacity-50">
+                     <button type="button" onClick={cerrarModal} disabled={guardando} className="rounded-full border border-[#e5e7eb] bg-white px-6 py-2.5 text-sm font-semibold text-[#6b7280] transition hover:bg-[#fafafa] disabled:opacity-50">Cancelar</button>
+                     <button type="button" onClick={asignarEspecialista} disabled={!especialistaSeleccionada || guardando} className="inline-flex items-center justify-center gap-2 rounded-full bg-[#6e0b6c] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#570956] disabled:cursor-not-allowed disabled:opacity-50">
                         <Check size={17} />
-                        Asignar especialista
+                        {guardando ? 'Asignando...' : 'Asignar especialista'}
                      </button>
                   </div>
 

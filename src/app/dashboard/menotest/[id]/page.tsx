@@ -27,13 +27,7 @@ interface HistoriaClinica {
    observaciones?: string;
 }
 
-// ==================== DATOS DE EJEMPLO ====================
 
-const ESPECIALISTAS: Especialista[] = [
-   { id: 1, nombre: 'Dra. Ana Martínez', especialidad: 'Ginecología', correo: 'ana@example.com', telefono: '5512345678' },
-   { id: 2, nombre: 'Dra. Laura Hernández', especialidad: 'Psicología', correo: 'laura@example.com', telefono: '5512345679' },
-   { id: 3, nombre: 'Dra. Sofía Ramírez', especialidad: 'Medicina General', correo: 'sofia@example.com', telefono: '5512345680' }
-];
 
 const HISTORIA_CLINICA_DEMO: HistoriaClinica = {
    completada: true,
@@ -63,6 +57,24 @@ export default function MenoTestDetailPage() {
    // Demostración
    const [mostrarHistoriaDemo, setMostrarHistoriaDemo] = useState(false);
    const esDesarrollo = process.env.NODE_ENV === 'development';
+
+   
+   const [especialistas, setEspecialistas] = useState<Especialista[]>([]);
+   const [guardandoEspecialista, setGuardandoEspecialista] = useState(false);
+
+   useEffect(() => {
+      const cargar = async () => {
+         try {
+            const res = await fetch('/api/admin/especialistas', { cache: 'no-store' });
+            if (!res.ok) return;
+            const data = await res.json();
+            setEspecialistas(data.datos ?? []);
+         } catch (error) {
+            console.error('Error cargando especialistas:', error);
+         }
+      };
+      cargar();
+   }, []);;
 
    // Cargar evaluación
    useEffect(() => {
@@ -101,26 +113,50 @@ export default function MenoTestDetailPage() {
       setEspecialistaId(null);
    };
 
-   // Asignación temporal
-   const asignarEspecialista = () => {
+   // Asignación especialista
+   const asignarEspecialista = async () => {
       if (!especialistaId || !evaluation) return;
 
-      const especialista = ESPECIALISTAS.find(item => item.id === especialistaId);
-      if (!especialista) return;
+      setGuardandoEspecialista(true);
 
-      setEvaluation((prev: any) => ({
-         ...prev,
-         especialista_id: especialista.id,
-         especialista_nombre: especialista.nombre,
-         especialista,
-         historia_clinica: prev.historia_clinica ?? { completada: false }
-      }));
+      try {
+         const res = await fetch(`/api/admin/evaluaciones/${evaluation.id}/especialista`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ especialistaId }),
+         });
 
-      setMostrarHistoriaDemo(false);
-      cerrarModalEspecialista();
+         const data = await res.json();
+         if (!res.ok) throw new Error(data.error || 'No se pudo asignar');
+
+         const esp = especialistas.find(e => e.id === especialistaId);
+         if (!esp) return;
+
+         setEvaluation((prev: any) => ({
+            ...prev,
+            especialista_id: esp.id,
+            especialista_nombre: esp.nombre,
+            especialista: {
+               id: esp.id,
+               nombre: esp.nombre,
+               especialidad: esp.especialidad,
+               correo: esp.correo,
+               telefono: esp.telefono,
+            },
+            historia_clinica: prev.historia_clinica ?? { completada: false },
+         }));
+
+         setMostrarHistoriaDemo(false);
+         cerrarModalEspecialista();
+      } catch (error: any) {
+         console.error(error);
+         alert(error.message || 'Error al asignar especialista');
+      } finally {
+         setGuardandoEspecialista(false);
+      }
    };
 
-   const especialistaSeleccionada = ESPECIALISTAS.find(item => item.id === especialistaId);
+   const especialistaSeleccionada = especialistas.find(item => item.id === especialistaId);
 
    if (cargando) {
       return <div className="py-16 text-center text-sm text-[#9ca3af]">Cargando evaluación...</div>;
@@ -491,7 +527,7 @@ export default function MenoTestDetailPage() {
 
                         <select id="especialista-select" value={especialistaId ?? ''} onChange={event => setEspecialistaId(event.target.value ? Number(event.target.value) : null)} className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#374151] outline-none transition focus:border-[#6e0b6c] focus:ring-2 focus:ring-[#f5eaf5]">
                            <option value="">Selecciona una opción</option>
-                           {ESPECIALISTAS.map(especialista => <option key={especialista.id} value={especialista.id}>{especialista.nombre} — {especialista.especialidad}</option>)}
+                           {especialistas.map(especialista => <option key={especialista.id} value={especialista.id}>{especialista.nombre} — {especialista.especialidad}</option>)}
                         </select>
                      </div>
 

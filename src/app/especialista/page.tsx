@@ -37,8 +37,10 @@ export default function EspecialistaPage() {
    }, []);
 
    const total = datos.length;
-   const conPuntaje = datos.filter(item => item.puntaje_total !== null).length;
-   const pendientes = total - conPuntaje;
+   // const conPuntaje = datos.filter(item => item.puntaje_total !== null).length;
+   // const pendientes = total - conPuntaje;
+   const conResultado = datos.filter(item => Number(item.historia_completada) === 1).length;
+   const pendientes = total - conResultado;
 
    return (
       <div>
@@ -62,13 +64,13 @@ export default function EspecialistaPage() {
 
                <div className="rounded-2xl border border-[#eee7ee] bg-white p-5 shadow-sm">
                   <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[#f5eaf5] text-[#6e0b6c]"><ClipboardList size={21} /></div>
-                  <p className="text-xs font-medium text-[#6b7280]">Evaluaciones con resultado</p>
-                  <p className="mt-2 text-3xl font-bold text-[#171717]">{cargando ? '—' : conPuntaje}</p>
+                  <p className="text-xs font-medium text-[#6b7280]">Historia clínica con resultado</p>
+                  <p className="mt-2 text-3xl font-bold text-[#171717]">{cargando ? '—' : conResultado}</p>
                </div>
 
                <div className="rounded-2xl border border-[#eee7ee] bg-white p-5 shadow-sm">
                   <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[#f5eaf5] text-[#6e0b6c]"><Stethoscope size={21} /></div>
-                  <p className="text-xs font-medium text-[#6b7280]">Evaluaciones pendientes</p>
+                  <p className="text-xs font-medium text-[#6b7280]">Historia clínica pendientes</p>
                   <p className="mt-2 text-3xl font-bold text-[#171717]">{cargando ? '—' : pendientes}</p>
                </div>
             </div>
