@@ -134,7 +134,7 @@ export default function MenoTestTable({ datos, cargando = false }: Props) {
                   <p className="mt-1 text-xs text-[#9ca3af]">Últimas evaluaciones registradas.</p>
                </div>
                <div className="flex items-center gap-3">
-                  <button type="button" onClick={() => exportarEvaluacionesExcel(evaluaciones, 'menotest-recientes')} disabled={cargando || evaluaciones.length === 0} className="inline-flex items-center gap-2 rounded-xl border border-[#e4d5e3] px-3 py-2 text-xs font-semibold text-[#6e0b6c] transition hover:bg-[#f5eaf5] disabled:cursor-not-allowed disabled:opacity-50">
+                  <button type="button" onClick={async () => { await exportarEvaluacionesExcel(evaluaciones, 'menotest-recientes'); }} disabled={cargando || evaluaciones.length === 0} className="inline-flex items-center gap-2 rounded-xl border border-[#e4d5e3] px-3 py-2 text-xs font-semibold text-[#6e0b6c] transition hover:bg-[#f5eaf5] disabled:cursor-not-allowed disabled:opacity-50">
                      <Download size={15} />
                      Exportar
                   </button>

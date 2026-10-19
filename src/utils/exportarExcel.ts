@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 export interface EvaluacionExcel {
    id: number;
@@ -14,35 +14,50 @@ export interface EvaluacionExcel {
    especialista_nombre?: string | null;
 }
 
-export function exportarEvaluacionesExcel(datos: EvaluacionExcel[], nombreArchivo = 'evaluaciones-menotest') {
-   const registros = datos.map(item => ({
-      'ID': item.id,
-      'Paciente': `${item.nombre} ${item.apellido_paterno} ${item.apellido_materno ?? ''}`.trim(),
-      'Correo electrónico': item.correo,
-      'Etapa': item.etapa ?? 'En evaluación',
-      'Puntaje': item.puntaje_total ?? '',
-      'IMC': item.imc ?? '',
-      'Fecha': new Date(item.creado_en).toLocaleDateString('es-MX'),
-      'Campaña': item.programa ?? '',
-      'Especialista': item.especialista_nombre ?? 'Sin asignar'
-   }));
+export async function exportarEvaluacionesExcel(
+   datos: EvaluacionExcel[],
+   nombreArchivo = 'evaluaciones-menotest'
+): Promise<void> {
+   const workbook = new ExcelJS.Workbook();
+   const hoja = workbook.addWorksheet('Evaluaciones');
 
-   const hoja = XLSX.utils.json_to_sheet(registros);
-
-   hoja['!cols'] = [
-      { wch: 10 },
-      { wch: 35 },
-      { wch: 38 },
-      { wch: 22 },
-      { wch: 12 },
-      { wch: 12 },
-      { wch: 18 },
-      { wch: 24 },
-      { wch: 32 }
+   hoja.columns = [
+      { header: 'ID', key: 'id', width: 10 },
+      { header: 'Paciente', key: 'paciente', width: 35 },
+      { header: 'Correo electrónico', key: 'correo', width: 38 },
+      { header: 'Etapa', key: 'etapa', width: 22 },
+      { header: 'Puntaje', key: 'puntaje', width: 12 },
+      { header: 'IMC', key: 'imc', width: 12 },
+      { header: 'Fecha', key: 'fecha', width: 18 },
+      { header: 'Campaña', key: 'campaña', width: 24 },
+      { header: 'Especialista', key: 'especialista', width: 32 },
    ];
 
-   const libro = XLSX.utils.book_new();
-   XLSX.utils.book_append_sheet(libro, hoja, 'Evaluaciones');
+   hoja.getRow(1).font = { bold: true };
 
-   XLSX.writeFile(libro, `${nombreArchivo}.xlsx`);
+   datos.forEach(item => {
+      hoja.addRow({
+         id: item.id,
+         paciente: `${item.nombre} ${item.apellido_paterno} ${item.apellido_materno ?? ''}`.trim(),
+         correo: item.correo,
+         etapa: item.etapa ?? 'En evaluación',
+         puntaje: item.puntaje_total ?? '',
+         imc: item.imc ?? '',
+         fecha: new Date(item.creado_en).toLocaleDateString('es-MX'),
+         campaña: item.programa ?? '',
+         especialista: item.especialista_nombre ?? 'Sin asignar',
+      });
+   });
+
+   const buffer = await workbook.xlsx.writeBuffer();
+   const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+   });
+
+   const url = URL.createObjectURL(blob);
+   const link = document.createElement('a');
+   link.href = url;
+   link.download = `${nombreArchivo}.xlsx`;
+   link.click();
+   URL.revokeObjectURL(url);
 }

@@ -198,7 +198,7 @@ export default function MenoTestPage() {
                   <p className="mt-1 text-xs text-[#9ca3af]">{cargando ? 'Cargando...' : `${filteredData.length} ${filteredData.length === 1 ? 'resultado' : 'resultados'}`}</p>
                </div>
 
-               <button type="button" onClick={() => exportarEvaluacionesExcel(filteredData)} disabled={!mounted || cargando || filteredData.length === 0} suppressHydrationWarning className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#6e0b6c] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#570956] disabled:cursor-not-allowed disabled:opacity-50">
+               <button type="button" onClick={async () => { await exportarEvaluacionesExcel(filteredData); }} disabled={!mounted || cargando || filteredData.length === 0} suppressHydrationWarning className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#6e0b6c] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#570956] disabled:cursor-not-allowed disabled:opacity-50">
                   <Download size={16} />
                   Exportar a Excel
                </button>
