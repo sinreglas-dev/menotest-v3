@@ -37,6 +37,9 @@ export default function Quiz({ data, onFinish, onBack, program }: Props) {
   const [currentHabitIndex, setCurrentHabitIndex] = useState(0);
   const [habitAnswers, setHabitAnswers] = useState<HabitAnswer[]>([]);
 
+  // Estado de envío final
+  const [submitting, setSubmitting] = useState(false);
+
   // Pregunta actual
   const currentQuestion = data.questions[currentQuestionIndex];
   const totalQuestions = data.questions.length;
@@ -114,6 +117,9 @@ export default function Quiz({ data, onFinish, onBack, program }: Props) {
   // Anterior
   const handlePrevious = () => {
 
+    // Bloqueo durante envío
+    if (submitting) return;
+
     // Hábitos
     if (quizStep === 'habits') {
 
@@ -162,11 +168,13 @@ export default function Quiz({ data, onFinish, onBack, program }: Props) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Siguiente hábito
+  // Siguiente hábito / Finalizar
   const handleHabitNext = () => {
     if (!currentHabitAnswer) return;
+    if (submitting) return;
 
     if (isLastHabit) {
+      setSubmitting(true);
       onFinish({ menstruationValue, answers, habitAnswers });
       return;
     }
@@ -271,7 +279,12 @@ export default function Quiz({ data, onFinish, onBack, program }: Props) {
             {/* Navegación */}
             <div className="mt-4 flex flex-col-reverse gap-3 border-t border-[#eee8ee] pt-4 sm:flex-row sm:items-center sm:justify-between">
 
-              <button type="button" onClick={handlePrevious} className="inline-flex items-center justify-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-6 py-3.5 text-sm font-semibold text-[#6b7280] transition hover:border-[#6e0b6c]/30 hover:bg-[#faf7fa] hover:text-[#6e0b6c]">
+              <button
+                type="button"
+                onClick={handlePrevious}
+                disabled={submitting}
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-6 py-3.5 text-sm font-semibold text-[#6b7280] transition hover:border-[#6e0b6c]/30 hover:bg-[#faf7fa] hover:text-[#6e0b6c] disabled:cursor-not-allowed disabled:opacity-50"
+              >
                 <ArrowLeft size={18} />
                 {quizStep === 'menstruation' ? 'Volver a mis datos' : 'Anterior'}
               </button>
@@ -305,10 +318,12 @@ export default function Quiz({ data, onFinish, onBack, program }: Props) {
                 <button
                   type="button"
                   onClick={handleHabitNext}
-                  disabled={!currentHabitAnswer}
+                  disabled={!currentHabitAnswer || submitting}
                   className="group inline-flex items-center justify-center gap-3 rounded-full bg-[#6e0b6c] px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#6e0b6c]/20 transition duration-300 hover:-translate-y-0.5 hover:bg-[#570956] disabled:cursor-not-allowed disabled:bg-[#d8c4d7] disabled:text-white/80 disabled:opacity-60 disabled:shadow-none disabled:hover:translate-y-0 disabled:hover:bg-[#d8c4d7]"
                 >
-                  {isLastHabit ? 'Ver mis resultados' : 'Siguiente'}
+                  {isLastHabit
+                    ? (submitting ? 'Enviando...' : 'Ver mis resultados')
+                    : 'Siguiente'}
                   <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1 group-disabled:translate-x-0" />
                 </button>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 import Welcome from '@/components/menotest/Welcome';
 import PatientForm, { PatientData } from '@/components/menotest/PatientForm';
@@ -57,6 +57,9 @@ export default function MenoTestClient({ program }: Props) {
   const [estadoBd, setEstadoBd] = useState<EstadoBaseDatos>('verificando');
   const [verificandoAlComenzar, setVerificandoAlComenzar] = useState(false);
 
+  // Bandera anti-duplicado: evita que el mismo test se envíe dos veces
+  const enviandoRef = useRef(false);
+
   /**
    * Verifica si la base de datos está disponible consultando /api/salud.
    * Devuelve `true` si está activa, `false` si hay error.
@@ -96,6 +99,10 @@ export default function MenoTestClient({ program }: Props) {
 
   // Procesa las respuestas al terminar el test
   const handleFinishTest = async (quizResult: QuizResult) => {
+    // Guard anti-duplicado: si ya se está enviando, ignora el segundo clic
+    if (enviandoRef.current) return;
+    enviandoRef.current = true;
+
     const {
       menstruationValue: selectedMenstruationValue,
       answers: testAnswers,
@@ -140,6 +147,8 @@ export default function MenoTestClient({ program }: Props) {
 
         if (!res.ok) {
           console.error('No se pudo guardar la evaluación en el servidor.');
+          // Permite reintentar si el envío falló
+          enviandoRef.current = false;
         } else {
           // Guardamos el id que devuelve el endpoint para disparar el envío de reportes
           const data = await res.json();
@@ -149,7 +158,12 @@ export default function MenoTestClient({ program }: Props) {
         }
       } catch (error) {
         console.error('Error de red al guardar la evaluación:', error);
+        // Permite reintentar si hubo error de red
+        enviandoRef.current = false;
       }
+    } else {
+      // Sin paciente no hay nada que guardar; libera el lock por seguridad
+      enviandoRef.current = false;
     }
 
     // Muestra los resultados (después de iniciar el guardado)
@@ -170,6 +184,9 @@ export default function MenoTestClient({ program }: Props) {
     setScore(0);
     setEvaluacionId(null);
     setStep('welcome');
+
+    // CRÍTICO: liberar el lock para permitir un nuevo envío
+    enviandoRef.current = false;
 
     window.scrollTo({
       top: 0,
