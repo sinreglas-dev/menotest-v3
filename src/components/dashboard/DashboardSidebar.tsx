@@ -12,7 +12,8 @@ interface Props {
 
 const MENU = [
    { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-   { label: 'MenoTest', href: '/dashboard/menotest', icon: ClipboardList }
+   { label: 'MenoTest', href: '/dashboard/menotest', icon: ClipboardList },
+   { label: 'Analítica', href: '/dashboard/analitica', icon: ClipboardList }
 ];
 
 export default function DashboardSidebar({ open, onClose }: Props) {
