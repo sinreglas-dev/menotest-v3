@@ -57,8 +57,8 @@ export default function MenoTestFilters({
                   <option value="">Todas las campañas</option>
                   <option value="general">Sin Reglas</option>
                   <option value="iztapalapa">Organon</option>
-                  <option value="Reina Madre">Reina Madre</option>
-                  <option value="FEMSA">FEMSA</option>
+                  <option value="reina_madre">Reina Madre</option>
+                  <option value="femsa">FEMSA</option>
                </select>
 
                {/* Etapa */}
