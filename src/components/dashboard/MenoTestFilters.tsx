@@ -1,20 +1,32 @@
 'use client';
 
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { CalendarDays, Search, SlidersHorizontal, X } from 'lucide-react';
 
 interface Props {
    search: string;
    program: string;
    stage: string;
+   date: string;
    onSearchChange: (value: string) => void;
    onProgramChange: (value: string) => void;
    onStageChange: (value: string) => void;
+   onDateChange: (value: string) => void;
    onClear: () => void;
 }
 
-export default function MenoTestFilters({ search, program, stage, onSearchChange, onProgramChange, onStageChange, onClear }: Props) {
+export default function MenoTestFilters({
+   search,
+   program,
+   stage,
+   date,
+   onSearchChange,
+   onProgramChange,
+   onStageChange,
+   onDateChange,
+   onClear,
+}: Props) {
 
-   const hasFilters = search || program || stage;
+   const hasFilters = Boolean(search || program || stage || date);
 
    return (
       <section className="rounded-2xl border border-[#eee7ee] bg-white p-4 shadow-sm sm:p-5">
@@ -24,21 +36,37 @@ export default function MenoTestFilters({ search, program, stage, onSearchChange
             {/* Buscador */}
             <div className="relative flex-1">
                <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
-               <input type="text" value={search} onChange={event => onSearchChange(event.target.value)} placeholder="Buscar por nombre o correo..." className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-white pl-11 pr-4 text-sm text-[#171717] outline-none transition placeholder:text-[#9ca3af] focus:border-[#6e0b6c] focus:ring-2 focus:ring-[#6e0b6c]/10" />
+               <input
+                  type="text"
+                  value={search}
+                  onChange={event => onSearchChange(event.target.value)}
+                  placeholder="Buscar por nombre o correo..."
+                  className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-white pl-11 pr-4 text-sm text-[#171717] outline-none transition placeholder:text-[#9ca3af] focus:border-[#6e0b6c] focus:ring-2 focus:ring-[#6e0b6c]/10"
+               />
             </div>
 
             {/* Filtros */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:flex xl:shrink-0">
 
-               <select value={program} onChange={event => onProgramChange(event.target.value)} className="h-11 min-w-[150px] rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#6b7280] outline-none transition focus:border-[#6e0b6c]">
+               {/* Campaña */}
+               <select
+                  value={program}
+                  onChange={event => onProgramChange(event.target.value)}
+                  className="h-11 min-w-[150px] rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#6b7280] outline-none transition focus:border-[#6e0b6c]"
+               >
                   <option value="">Todas las campañas</option>
-                  <option value="general">Sin Reglas</option>        
-                  <option value="iztapalapa">Organon</option> 
+                  <option value="general">Sin Reglas</option>
+                  <option value="iztapalapa">Organon</option>
                   <option value="Reina Madre">Reina Madre</option>
                   <option value="FEMSA">FEMSA</option>
                </select>
 
-               <select value={stage} onChange={event => onStageChange(event.target.value)} className="h-11 min-w-[175px] rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#6b7280] outline-none transition focus:border-[#6e0b6c]">
+               {/* Etapa */}
+               <select
+                  value={stage}
+                  onChange={event => onStageChange(event.target.value)}
+                  className="h-11 min-w-[175px] rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#6b7280] outline-none transition focus:border-[#6e0b6c]"
+               >
                   <option value="">Todas las etapas</option>
                   <option value="Premenopausia">Premenopausia</option>
                   <option value="Transición menopáusica">Transición menopáusica</option>
@@ -47,11 +75,27 @@ export default function MenoTestFilters({ search, program, stage, onSearchChange
                   <option value="En evaluación">En evaluación</option>
                </select>
 
+               {/* Fecha */}
+               <div className="relative">
+                  <CalendarDays size={17} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#6e0b6c]" />
+                  <input
+                     type="date"
+                     value={date}
+                     onChange={event => onDateChange(event.target.value)}
+                     aria-label="Filtrar por fecha"
+                     className="h-11 w-full min-w-[170px] rounded-xl border border-[#e5e7eb] bg-white pl-10 pr-3 text-sm text-[#6b7280] outline-none transition focus:border-[#6e0b6c] focus:ring-2 focus:ring-[#6e0b6c]/10"
+                  />
+               </div>
+
             </div>
 
-            {/* Limpiar */}
+            {/* Limpiar filtros */}
             {hasFilters && (
-               <button type="button" onClick={onClear} className="flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-[#e5e7eb] px-4 text-sm font-medium text-[#6b7280] transition hover:border-[#d7bdd6] hover:bg-[#f5eaf5] hover:text-[#6e0b6c]">
+               <button
+                  type="button"
+                  onClick={onClear}
+                  className="flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-[#e5e7eb] px-4 text-sm font-medium text-[#6b7280] transition hover:border-[#d7bdd6] hover:bg-[#f5eaf5] hover:text-[#6e0b6c]"
+               >
                   <X size={16} />
                   Limpiar
                </button>
@@ -59,9 +103,12 @@ export default function MenoTestFilters({ search, program, stage, onSearchChange
 
          </div>
 
+         {/* Información */}
          <div className="mt-4 flex items-center gap-2 border-t border-[#f4f1f4] pt-4">
             <SlidersHorizontal size={15} className="text-[#9ca3af]" />
-            <p className="text-xs text-[#9ca3af]">Utiliza los filtros para encontrar evaluaciones específicas.</p>
+            <p className="text-xs text-[#9ca3af]">
+               Utiliza los filtros para encontrar evaluaciones por nombre, correo, campaña, etapa o fecha.
+            </p>
          </div>
 
       </section>

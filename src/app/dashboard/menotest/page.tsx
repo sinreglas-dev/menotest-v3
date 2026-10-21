@@ -42,6 +42,7 @@ export default function MenoTestPage() {
    const [search, setSearch] = useState('');
    const [program, setProgram] = useState('');
    const [stage, setStage] = useState('');
+   const [date, setDate] = useState('');
    const [page, setPage] = useState(1);
 
    const [modalOpen, setModalOpen] = useState(false);
@@ -51,8 +52,8 @@ export default function MenoTestPage() {
    const [feedback, setFeedback] = useState<string | null>(null);
    const [mounted, setMounted] = useState(false);
 
-   
-   useEffect(() => setMounted(true), []); 
+
+   useEffect(() => setMounted(true), []);
 
    // Cargar evaluaciones
    useEffect(() => {
@@ -146,16 +147,42 @@ export default function MenoTestPage() {
       }
    };
 
+   // const filteredData = useMemo(() => {
+   //    const term = search.toLowerCase().trim();
+   //    return datos.filter(item => {
+   //       const nombreCompleto = `${item.nombre} ${item.apellido_paterno} ${item.apellido_materno ?? ''}`.toLowerCase();
+   //       const matchesSearch = !term || nombreCompleto.includes(term) || item.correo.toLowerCase().includes(term);
+   //       const matchesProgram = !program || item.programa_clave === program;
+   //       const matchesStage = !stage || item.etapa === stage;
+   //       return matchesSearch && matchesProgram && matchesStage;
+   //    });
+   // }, [datos, search, program, stage]);
+
    const filteredData = useMemo(() => {
       const term = search.toLowerCase().trim();
+
       return datos.filter(item => {
          const nombreCompleto = `${item.nombre} ${item.apellido_paterno} ${item.apellido_materno ?? ''}`.toLowerCase();
-         const matchesSearch = !term || nombreCompleto.includes(term) || item.correo.toLowerCase().includes(term);
+
+         // Búsqueda
+         const matchesSearch = !term ||
+            nombreCompleto.includes(term) ||
+            item.correo.toLowerCase().includes(term);
+
+         // Campaña
          const matchesProgram = !program || item.programa_clave === program;
-         const matchesStage = !stage || item.etapa === stage;
-         return matchesSearch && matchesProgram && matchesStage;
+
+         // Etapa
+         const matchesStage = !stage ||
+            (stage === 'En evaluación' ? !item.etapa : item.etapa === stage);
+
+         // Fecha
+         const fechaEvaluacion = item.creado_en.slice(0, 10);
+         const matchesDate = !date || fechaEvaluacion === date;
+
+         return matchesSearch && matchesProgram && matchesStage && matchesDate;
       });
-   }, [datos, search, program, stage]);
+   }, [datos, search, program, stage, date]);
 
    const totalPages = Math.max(1, Math.ceil(filteredData.length / ITEMS_PER_PAGE));
    const currentPage = Math.min(page, totalPages);
@@ -180,7 +207,7 @@ export default function MenoTestPage() {
             </div>
          </div>
 
-         <MenoTestFilters
+         {/* <MenoTestFilters
             search={search}
             program={program}
             stage={stage}
@@ -188,6 +215,23 @@ export default function MenoTestPage() {
             onProgramChange={v => { setProgram(v); setPage(1); }}
             onStageChange={v => { setStage(v); setPage(1); }}
             onClear={() => { setSearch(''); setProgram(''); setStage(''); setPage(1); }}
+         /> */}
+         <MenoTestFilters
+            search={search}
+            program={program}
+            stage={stage}
+            date={date}
+            onSearchChange={v => { setSearch(v); setPage(1); }}
+            onProgramChange={v => { setProgram(v); setPage(1); }}
+            onStageChange={v => { setStage(v); setPage(1); }}
+            onDateChange={v => { setDate(v); setPage(1); }}
+            onClear={() => {
+               setSearch('');
+               setProgram('');
+               setStage('');
+               setDate('');
+               setPage(1);
+            }}
          />
 
          <section className="overflow-hidden rounded-2xl border border-[#eee7ee] bg-white shadow-sm">

@@ -190,7 +190,7 @@ export default function MenoTestTable({ datos, cargando = false }: Props) {
                               <td className="px-4 py-4">
                                  <span className="inline-flex rounded-lg bg-[#f5eaf5] px-2.5 py-1 text-[11px] font-semibold text-[#6e0b6c]">{item.programa}</span>
                               </td>
-
+ 
                               <td className="px-4 py-4">
                                  {item.especialista_nombre ? (
                                     <div className="flex flex-col items-start gap-1.5">
